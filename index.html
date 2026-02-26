@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>老年人内在能力 AI 评估系统</title>
+    <!-- 引入 MediaPipe 依赖 -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <!-- 引入 Chart.js (指定稳定版本 v3.9.1) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <style>
         :root {
             --primary: #2E86AB;
@@ -96,6 +99,10 @@
             border-radius: 50px;
             cursor: pointer;
             margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        .btn:hover:not(:disabled) {
+            opacity: 0.9;
         }
         .btn:disabled { background: #ccc; cursor: not-allowed; }
         .btn-next { background: var(--primary); }
@@ -141,6 +148,7 @@
         .status-waiting { color: #666; }
         .status-running { color: var(--warning); }
         .status-done { color: var(--success); }
+        .status-error { color: var(--danger); }
         
         .progress-bar {
             width: 100%;
@@ -188,6 +196,10 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 1rem;
+            transition: background 0.3s;
+        }
+        .test-nav button:hover:not(.active):not(.completed) {
+            background: #ddd;
         }
         .test-nav button.active {
             background: var(--primary);
@@ -198,7 +210,6 @@
             color: white;
         }
 
-        /* 问卷样式增强 */
         .questionnaire-section {
             background: #fff;
             border: 2px solid var(--primary);
@@ -233,14 +244,87 @@
             border: 2px solid #ddd;
             border-radius: 6px;
         }
+
+        .task-list {
+            margin-top: 15px;
+        }
+        .task-item {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        .task-item.checked {
+            background: #e8f8f0;
+            color: #27ae60;
+            text-decoration: line-through;
+        }
+        .task-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+        .task-item label {
+            flex: 1;
+            cursor: pointer;
+            font-weight: normal;
+        }
+        .task-item .task-desc {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
         
+        /* 修复图表容器样式 */
+        .chart-container {
+            position: relative;
+            height: 400px; /* 固定高度防止塌陷 */
+            width: 100%;
+            margin: 0 auto 20px;
+            max-width: 600px;
+        }
+
         @media print {
-            .btn, header, .no-print, .test-nav { display: none; }
+            .btn, header, .no-print, .test-nav, .loading-overlay { display: none; }
             .card { box-shadow: none; border: 1px solid #ccc; }
         }
     </style>
 </head>
 <body>
+
+<div id="loadingOverlay" class="loading-overlay">
+    <div style="text-align:center;">
+        <div class="loading-spinner"></div>
+        <p style="margin-top:15px; font-weight:bold; color:var(--primary);">正在生成报告，请稍候...</p>
+    </div>
+</div>
 
 <header>
     <h1>👴👵 老年人内在能力 AI 评估系统</h1>
@@ -259,7 +343,7 @@
         </div>
         <div class="form-group">
             <label>年龄：</label>
-            <input type="number" id="userAge" placeholder="岁" style="max-width:100px;">
+            <input type="number" id="userAge" placeholder="岁" style="max-width:100px;" min="60" max="120">
         </div>
         <div class="form-group">
             <label>性别：</label>
@@ -270,11 +354,11 @@
         </div>
         <div class="form-group">
             <label>身高 (cm)：</label>
-            <input type="number" id="userHeight" placeholder="cm" style="max-width:150px;" oninput="calcBMI()">
+            <input type="number" id="userHeight" placeholder="cm" style="max-width:150px;" oninput="calcBMI()" min="100" max="250">
         </div>
         <div class="form-group">
             <label>体重 (kg)：</label>
-            <input type="number" id="userWeight" placeholder="kg" style="max-width:150px;" oninput="calcBMI()">
+            <input type="number" id="userWeight" placeholder="kg" style="max-width:150px;" oninput="calcBMI()" min="30" max="200">
             <div id="bmiResult" class="bmi-box">BMI: --</div>
         </div>
         <div class="form-group">
@@ -334,7 +418,7 @@
         </div>
     </div>
 
-    <!-- 步骤 3: 标准化问卷 (重点增强版) -->
+    <!-- 步骤 3: 标准化问卷 -->
     <div class="card" id="step3" style="display:none;">
         <span class="step-badge">步骤 3/4</span>
         <h2>📋 标准化健康问卷</h2>
@@ -342,10 +426,8 @@
             ℹ️ 以下问卷基于 WHO ICOPE 标准，请老人或家属如实填写
         </p>
         
-        <!-- 感官功能问卷 -->
         <div class="questionnaire-section">
-            <h3>👁️ 感官功能评估 (Sensory)</h3>
-            
+            <h3>👁️ 感官功能评估 (影响社会交往)</h3>
             <div class="question-item">
                 <label>1. 视力测试：不戴眼镜时，能否看清一臂距离的手机文字？</label>
                 <select id="q_vision">
@@ -354,7 +436,6 @@
                     <option value="0">❌ 看不清 (0 分)</option>
                 </select>
             </div>
-            
             <div class="question-item">
                 <label>2. 听力测试：不戴助听器时，能否听清正常音量的对话？</label>
                 <select id="q_hearing">
@@ -365,11 +446,9 @@
             </div>
         </div>
         
-        <!-- 心理活力问卷 -->
         <div class="questionnaire-section">
-            <h3>🧠 心理活力评估 (Psychological)</h3>
+            <h3>🧠 心理活力评估</h3>
             <p style="color:#666; font-size:0.9rem;">* 基于 PHQ-2 抑郁筛查量表</p>
-            
             <div class="question-item">
                 <label>3. 过去 2 周，是否经常感到情绪低落、沮丧或无望？</label>
                 <select id="q_mood1">
@@ -378,7 +457,6 @@
                     <option value="2">❌ 经常如此 (2 分)</option>
                 </select>
             </div>
-            
             <div class="question-item">
                 <label>4. 过去 2 周，是否对做事情提不起兴趣或乐趣？</label>
                 <select id="q_mood2">
@@ -387,7 +465,6 @@
                     <option value="2">❌ 经常如此 (2 分)</option>
                 </select>
             </div>
-            
             <div class="question-item">
                 <label>5. 近期是否感到容易疲劳、精力不足？</label>
                 <select id="q_energy">
@@ -398,10 +475,8 @@
             </div>
         </div>
         
-        <!-- 营养状况问卷 -->
         <div class="questionnaire-section">
-            <h3>🍎 营养状况评估 (Nutritional)</h3>
-            
+            <h3>🍎 营养状况评估</h3>
             <div class="question-item">
                 <label>6. 过去 3 个月体重是否有明显变化？</label>
                 <select id="q_weight">
@@ -410,7 +485,6 @@
                     <option value="1">⚠️ 增加 3kg 以上 (1 分)</option>
                 </select>
             </div>
-            
             <div class="question-item">
                 <label>7. 近期食欲如何？</label>
                 <select id="q_appetite">
@@ -428,6 +502,29 @@
     <div class="card" id="step4" style="display:none;">
         <span class="step-badge">步骤 4/4</span>
         <h2>📄 内在能力评估报告</h2>
+        
+        <!-- 修复：增加 chart-container 类名和固定高度 -->
+        <div class="chart-container">
+            <h3 style="text-align: center; color: var(--primary);">📈 五大维度能力雷达图 (0-10 分)</h3>
+            <canvas id="abilityRadarChart"></canvas>
+        </div>
+        
+        <!-- 干预任务表容器 -->
+        <div style="background: #f5fafe; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: var(--primary); margin-top: 0;">✅ 个性化干预任务表</h3>
+            <p style="color: #666;">根据您的评估结果生成，完成后勾选即可标绿记录</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px;">
+                <div style="flex: 1; min-width: 300px;">
+                    <h4 style="color: var(--accent); border-bottom: 2px solid #eee; padding-bottom: 10px;">每日任务</h4>
+                    <div id="dailyTasks" class="task-list"></div>
+                </div>
+                <div style="flex: 1; min-width: 300px;">
+                    <h4 style="color: var(--accent); border-bottom: 2px solid #eee; padding-bottom: 10px;">每周任务</h4>
+                    <div id="weeklyTasks" class="task-list"></div>
+                </div>
+            </div>
+        </div>
+        
         <div id="reportContent"></div>
         <div class="no-print">
             <button class="btn btn-success" onclick="window.print()">🖨️ 打印/保存 PDF</button>
@@ -449,20 +546,31 @@ let data = {
     questionnaire: {}
 };
 
+let drawConnectors = window.drawConnectors || function() {};
+let POSE_CONNECTIONS = window.POSE_CONNECTIONS || [];
+let pose = null;
+let camera = null;
+let pose2 = null;
+let camera2 = null;
+let radarChart = null;
+
 // ================= 页面导航 =================
 function goToStep(step) {
     if(step === 2) {
-        if(!document.getElementById('userName').value || !document.getElementById('userAge').value) {
-            alert('请填写完整基础信息'); return;
+        const name = document.getElementById('userName').value.trim();
+        const age = document.getElementById('userAge').value.trim();
+        if(!name || !age) {
+            alert('请填写完整的姓名和年龄信息！');
+            return;
         }
         data.basic = {
-            name: document.getElementById('userName').value,
-            age: document.getElementById('userAge').value,
+            name: name,
+            age: age,
             gender: document.getElementById('userGender').value,
-            height: document.getElementById('userHeight').value,
-            weight: document.getElementById('userWeight').value,
+            height: document.getElementById('userHeight').value || 0,
+            weight: document.getElementById('userWeight').value || 0,
             bmi: document.getElementById('bmiResult').innerText,
-            diseases: document.getElementById('userDiseases').value
+            diseases: document.getElementById('userDiseases').value || '无'
         };
     }
     if(step === 4) {
@@ -475,7 +583,28 @@ function goToStep(step) {
             weight: parseInt(document.getElementById('q_weight').value),
             appetite: parseInt(document.getElementById('q_appetite').value)
         };
-        generateReport();
+        
+        // 先显示加载层
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        
+        // 先切换页面显示，确保 DOM 存在
+        document.querySelectorAll('.card').forEach(el => el.style.display = 'none');
+        document.getElementById('step' + step).style.display = 'block';
+        window.scrollTo(0, 0);
+
+        // 延迟执行生成逻辑，确保 DOM 渲染完成，解决白屏问题
+        setTimeout(() => {
+            try {
+                generateReport();
+            } catch (error) {
+                console.error('报告生成错误:', error);
+                document.getElementById('reportContent').innerHTML = `<div style="color:red; padding:20px;">报告生成失败：${error.message}<br>请刷新页面重试</div>`;
+            } finally {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+        }, 100);
+        
+        return;
     }
     
     document.querySelectorAll('.card').forEach(el => el.style.display = 'none');
@@ -496,12 +625,17 @@ function showTest(testNum) {
 }
 
 function calcBMI() {
-    const h = document.getElementById('userHeight').value;
-    const w = document.getElementById('userWeight').value;
+    const h = parseFloat(document.getElementById('userHeight').value) || 0;
+    const w = parseFloat(document.getElementById('userWeight').value) || 0;
     const display = document.getElementById('bmiResult');
-    if(h && w && h > 0) {
-        const bmi = (w / ((h/100) ** 2)).toFixed(1);
-        let status = bmi < 18.5 ? '(偏瘦)' : bmi < 24 ? '(正常)' : '(超重)';
+    
+    if(h > 0 && w > 0) {
+        const bmi = (w / Math.pow(h/100, 2)).toFixed(1);
+        let status = '';
+        if (bmi < 18.5) status = '(偏瘦)';
+        else if (bmi < 24) status = '(正常)';
+        else if (bmi < 28) status = '(超重)';
+        else status = '(肥胖)';
         display.innerText = `BMI: ${bmi} ${status}`;
     } else {
         display.innerText = 'BMI: --';
@@ -512,17 +646,13 @@ function calcBMI() {
 function startLangTest() {
     const btn = document.getElementById('btnLang');
     const status = document.getElementById('langStatus');
-    
     btn.disabled = true;
     status.className = 'status-box status-running';
     status.innerText = '🔴 正在录音识别中...';
-    
     setTimeout(() => {
         const recognizedText = "今天的天气很好，我想去公园散步，看看花草树木。";
-        const mockScore = Math.floor(Math.random() * (100 - 70) + 70);
-        
+        const mockScore = Math.floor(Math.random() * 30) + 70;
         data.aiTests.language = { done: true, score: mockScore, text: recognizedText };
-        
         status.className = 'status-box status-done';
         status.innerHTML = `✅ 识别成功<br>内容："${recognizedText}"<br>流畅度评分：${mockScore}/100`;
         btn.innerText = '✅ 已完成';
@@ -533,65 +663,62 @@ function startLangTest() {
 }
 
 // ================= 测试 2: 行动能力 =================
-let pose = null;
-let camera = null;
-
 function startActionTest() {
     const btn = document.getElementById('btnAction');
     const status = document.getElementById('actionStatus');
     const video = document.getElementById('videoElement');
     const canvas = document.getElementById('output_canvas');
-    
     btn.disabled = true;
     status.className = 'status-box status-running';
     status.innerText = '📹 正在启动摄像头...';
-    
-    pose = new Pose({locateFile: (file) => {
-        return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-    }});
-    
-    pose.setOptions({
-        modelComplexity: 1,
-        smoothLandmarks: true,
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5
-    });
-    
-    pose.onResults(onActionResults);
-    
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
-            .then(function(stream) {
-                video.srcObject = stream;
-                video.style.display = 'block';
-                canvas.style.display = 'block';
-                
-                camera = new Camera(video, {
-                    onFrame: async () => { await pose.send({image: video}); },
-                    width: 640,
-                    height: 480
+    try {
+        pose = new Pose({locateFile: (file) => {
+            return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+        }});
+        pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+        pose.onResults(onActionResults);
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
+                .then(function(stream) {
+                    video.srcObject = stream;
+                    video.style.display = 'block';
+                    canvas.style.display = 'block';
+                    camera = new Camera(video, {
+                        onFrame: async () => { await pose.send({image: video}); },
+                        width: 640, height: 480
+                    });
+                    camera.start();
+                    status.innerText = '✅ 摄像头已启动，请开始做椅子站立动作';
+                    simulateStandCount();
+                })
+                .catch(function(error) {
+                    status.className = 'status-box status-error';
+                    status.innerText = '❌ 摄像头访问失败：' + error.message;
+                    btn.disabled = false;
                 });
-                camera.start();
-                status.innerText = '✅ 摄像头已启动，请开始做椅子站立动作';
-                simulateStandCount();
-            })
-            .catch(function(error) {
-                status.innerText = '❌ 摄像头访问失败';
-                btn.disabled = false;
-            });
+        } else {
+            status.className = 'status-box status-error';
+            status.innerText = '❌ 您的浏览器不支持摄像头功能';
+            btn.disabled = false;
+        }
+    } catch (error) {
+        status.className = 'status-box status-error';
+        status.innerText = '❌ 系统初始化失败：' + error.message;
+        btn.disabled = false;
     }
 }
 
 function onActionResults(results) {
     const canvas = document.getElementById('output_canvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = 640;
-    canvas.height = 480;
+    canvas.width = 640; canvas.height = 480;
+    ctx.save();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
     if (results.poseLandmarks) {
         drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {color: '#00FF00', lineWidth: 3});
     }
+    ctx.restore();
 }
 
 function simulateStandCount() {
@@ -600,24 +727,25 @@ function simulateStandCount() {
         count++;
         document.getElementById('actionCount').innerText = `完成次数：${count}/5`;
         document.getElementById('actionProgress').style.width = (count * 20) + '%';
-        if (count >= 5) {
-            clearInterval(interval);
-            finishActionTest();
-        }
+        if (count >= 5) { clearInterval(interval); finishActionTest(); }
     }, 1500);
 }
 
 function finishActionTest() {
     const btn = document.getElementById('btnAction');
     const status = document.getElementById('actionStatus');
-    if (camera) camera.stop();
-    document.getElementById('videoElement').style.display = 'none';
+    // 彻底释放资源，防止卡顿
+    if (camera) { camera.stop(); camera = null; }
+    if (pose) { pose.close(); pose = null; }
+    const video = document.getElementById('videoElement');
+    if (video.srcObject) { video.srcObject.getTracks().forEach(track => track.stop()); }
+    video.style.display = 'none';
     document.getElementById('output_canvas').style.display = 'none';
     
-    const mockTime = (Math.random() * (15 - 8) + 8).toFixed(1);
-    const score = mockTime < 10 ? 95 : mockTime < 15 ? 80 : 60;
+    const mockTime = (Math.random() * 7 + 8).toFixed(1);
+    let score = 0;
+    if (mockTime < 10) score = 95; else if (mockTime < 15) score = 80; else score = 60;
     data.aiTests.action = { done: true, score: score, time: mockTime };
-    
     status.className = 'status-box status-done';
     status.innerHTML = `✅ 测试完成<br>耗时：${mockTime}秒<br>评分：${score}/100`;
     btn.innerText = '✅ 已完成';
@@ -627,65 +755,62 @@ function finishActionTest() {
 }
 
 // ================= 测试 3: 活力步速 =================
-let pose2 = null;
-let camera2 = null;
-
 function startGaitTest() {
     const btn = document.getElementById('btnGait');
     const status = document.getElementById('gaitStatus');
     const video = document.getElementById('videoElement2');
     const canvas = document.getElementById('output_canvas2');
-    
     btn.disabled = true;
     status.className = 'status-box status-running';
     status.innerText = '📹 正在启动摄像头...';
-    
-    pose2 = new Pose({locateFile: (file) => {
-        return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-    }});
-    
-    pose2.setOptions({
-        modelComplexity: 1,
-        smoothLandmarks: true,
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5
-    });
-    
-    pose2.onResults(onGaitResults);
-    
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
-            .then(function(stream) {
-                video.srcObject = stream;
-                video.style.display = 'block';
-                canvas.style.display = 'block';
-                
-                camera2 = new Camera(video, {
-                    onFrame: async () => { await pose2.send({image: video}); },
-                    width: 640,
-                    height: 480
+    try {
+        pose2 = new Pose({locateFile: (file) => {
+            return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+        }});
+        pose2.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+        pose2.onResults(onGaitResults);
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
+                .then(function(stream) {
+                    video.srcObject = stream;
+                    video.style.display = 'block';
+                    canvas.style.display = 'block';
+                    camera2 = new Camera(video, {
+                        onFrame: async () => { await pose2.send({image: video}); },
+                        width: 640, height: 480
+                    });
+                    camera2.start();
+                    status.innerText = '✅ 摄像头已启动，请从画面一侧走到另一侧';
+                    simulateGaitTest();
+                })
+                .catch(function(error) {
+                    status.className = 'status-box status-error';
+                    status.innerText = '❌ 摄像头访问失败：' + error.message;
+                    btn.disabled = false;
                 });
-                camera2.start();
-                status.innerText = '✅ 摄像头已启动，请从画面一侧走到另一侧';
-                simulateGaitTest();
-            })
-            .catch(function(error) {
-                status.innerText = '❌ 摄像头访问失败';
-                btn.disabled = false;
-            });
+        } else {
+            status.className = 'status-box status-error';
+            status.innerText = '❌ 您的浏览器不支持摄像头功能';
+            btn.disabled = false;
+        }
+    } catch (error) {
+        status.className = 'status-box status-error';
+        status.innerText = '❌ 系统初始化失败：' + error.message;
+        btn.disabled = false;
     }
 }
 
 function onGaitResults(results) {
     const canvas = document.getElementById('output_canvas2');
     const ctx = canvas.getContext('2d');
-    canvas.width = 640;
-    canvas.height = 480;
+    canvas.width = 640; canvas.height = 480;
+    ctx.save();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
     if (results.poseLandmarks) {
         drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {color: '#00FF00', lineWidth: 3});
     }
+    ctx.restore();
 }
 
 function simulateGaitTest() {
@@ -693,24 +818,25 @@ function simulateGaitTest() {
     const interval = setInterval(() => {
         progress += 10;
         document.getElementById('gaitProgress').style.width = progress + '%';
-        if (progress >= 100) {
-            clearInterval(interval);
-            finishGaitTest();
-        }
+        if (progress >= 100) { clearInterval(interval); finishGaitTest(); }
     }, 500);
 }
 
 function finishGaitTest() {
     const btn = document.getElementById('btnGait');
     const status = document.getElementById('gaitStatus');
-    if (camera2) camera2.stop();
-    document.getElementById('videoElement2').style.display = 'none';
+    // 彻底释放资源
+    if (camera2) { camera2.stop(); camera2 = null; }
+    if (pose2) { pose2.close(); pose2 = null; }
+    const video = document.getElementById('videoElement2');
+    if (video.srcObject) { video.srcObject.getTracks().forEach(track => track.stop()); }
+    video.style.display = 'none';
     document.getElementById('output_canvas2').style.display = 'none';
     
-    const mockSpeed = (Math.random() * (1.4 - 0.6) + 0.6).toFixed(2);
-    const score = mockSpeed >= 1.0 ? 90 : mockSpeed >= 0.8 ? 75 : 55;
+    const mockSpeed = (Math.random() * 0.8 + 0.6).toFixed(2);
+    let score = 0;
+    if (mockSpeed >= 1.0) score = 90; else if (mockSpeed >= 0.8) score = 75; else score = 55;
     data.aiTests.gait = { done: true, score: score, speed: mockSpeed };
-    
     status.className = 'status-box status-done';
     status.innerHTML = `✅ 测试完成<br>步速：${mockSpeed} m/s<br>评分：${score}/100`;
     document.getElementById('gaitSpeed').innerText = `步速：${mockSpeed} m/s`;
@@ -730,71 +856,176 @@ function checkAllTestsComplete() {
     }
 }
 
-// ================= 生成报告 =================
+// ================= 生成报告 (五大维度版) =================
 function generateReport() {
     const d = data;
-    const date = new Date().toLocaleDateString();
+    const date = new Date().toLocaleDateString('zh-CN');
     
-    // 计算问卷得分
-    const sensoryScore = (d.questionnaire.vision + d.questionnaire.hearing) / 4 * 100;
-    const moodScore = ((6 - d.questionnaire.mood1 - d.questionnaire.mood2) / 6) * 100;
-    const nutritionScore = ((4 - d.questionnaire.weight - d.questionnaire.appetite) / 4) * 100;
+    // 计算各维度得分
+    const sensoryScore = Math.round(((d.questionnaire.vision + d.questionnaire.hearing) / 4) * 100);
+    const moodScore = Math.round(((6 - d.questionnaire.mood1 - d.questionnaire.mood2) / 6) * 100);
+    const nutritionScore = Math.round(((4 - d.questionnaire.weight - d.questionnaire.appetite) / 4) * 100);
     
-    const avgScore = Math.round((d.aiTests.language.score + d.aiTests.action.score + d.aiTests.gait.score + sensoryScore + moodScore + nutritionScore) / 6);
-    let riskLevel = avgScore >= 85 ? '低风险 (内在能力完好)' : avgScore >= 70 ? '中风险 (能力下降)' : '高风险 (需干预)';
-    let riskColor = avgScore >= 85 ? 'risk-low' : avgScore >= 70 ? 'risk-mid' : 'risk-high';
+    // 将行动能力和活力步速合并为"身体机能"
+    const physicalScore = Math.round((d.aiTests.action.score + d.aiTests.gait.score) / 2);
     
-    const isRisk = (score) => score < 70 ? 'risk-mid' : 'risk-low';
-    const riskText = (score) => score < 70 ? '需关注' : '正常';
+    // 综合得分 (除以 5)
+    const avgScore = Math.round((
+        d.aiTests.language.score + 
+        physicalScore + 
+        sensoryScore + 
+        moodScore + 
+        nutritionScore
+    ) / 5);
+    
+    let riskLevel = '';
+    let riskColor = '';
+    if (avgScore >= 85) { riskLevel = '低风险 (内在能力完好)'; riskColor = 'risk-low'; }
+    else if (avgScore >= 70) { riskLevel = '中风险 (能力下降)'; riskColor = 'risk-mid'; }
+    else { riskLevel = '高风险 (需干预)'; riskColor = 'risk-high'; }
 
+    const getRiskText = (score) => score < 70 ? '需关注' : '正常';
+    const getRiskClass = (score) => score < 70 ? 'risk-mid' : 'risk-low';
+
+    // 绘制雷达图 (5 个维度)
+    try {
+        const radarData = {
+            labels: ['身体机能', '认知功能', '营养状况', '心理健康', '社会交往'],
+            values: [
+                Math.round(physicalScore / 10),
+                Math.round(d.aiTests.language.score / 10),
+                Math.round(nutritionScore / 10),
+                Math.round(moodScore / 10),
+                Math.round(sensoryScore / 10)
+            ],
+            threshold: 7,
+            colors: []
+        };
+        radarData.values.forEach(score => {
+            radarData.colors.push(score < radarData.threshold ? '#c0392b' : '#27ae60');
+        });
+
+        const ctx = document.getElementById('abilityRadarChart').getContext('2d');
+        if (radarChart) radarChart.destroy();
+        
+        if (typeof Chart !== 'undefined') {
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: radarData.labels,
+                    datasets: [{
+                        label: '能力得分 (阈值 7 分)',
+                        data: radarData.values,
+                        backgroundColor: 'rgba(46, 134, 171, 0.2)',
+                        borderColor: '#2E86AB',
+                        borderWidth: 2,
+                        pointBackgroundColor: radarData.colors,
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: radarData.colors
+                    }, {
+                        label: '阈值线',
+                        data: Array(5).fill(radarData.threshold),
+                        backgroundColor: 'rgba(192, 57, 43, 0.1)',
+                        borderColor: '#c0392b',
+                        borderWidth: 1,
+                        borderDash: [5, 5],
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    // 优化：关闭动画以提升性能，解决卡顿
+                    animation: false, 
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 10,
+                            ticks: { stepSize: 1, font: { size: 14 } },
+                            pointLabels: { font: { size: 14, weight: 'bold' } }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { size: 12 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const dimension = radarData.labels[context.dataIndex];
+                                    let tip = `${dimension}: ${value} 分`;
+                                    if (value < radarData.threshold) tip += ' (低于阈值，需关注)';
+                                    return tip;
+                                }
+                            }
+                        }
+                    },
+                    maintainAspectRatio: false,
+                    responsive: true
+                }
+            });
+        } else {
+            throw new Error("Chart.js 库未加载成功");
+        }
+    } catch (chartError) {
+        console.error('雷达图绘制失败:', chartError);
+        // 如果图表失败，在页面提示，但不阻止报告生成
+        const chartContainer = document.querySelector('.chart-container');
+        if(chartContainer) {
+            chartContainer.innerHTML += `<div style="color:red; text-align:center; margin-top:10px;">⚠️ 图表加载失败，请检查网络连接</div>`;
+        }
+    }
+
+    // 生成干预任务
+    const tasks = { daily: [], weekly: [] };
+    if (physicalScore < 80) {
+        tasks.daily.push({ title: '平衡训练：单腿站立', desc: '每侧站立 30 秒，共 2 组，站立时扶稳固定物体' });
+        tasks.daily.push({ title: '肌力训练：靠墙静蹲', desc: '30 秒/组，3 组，膝盖不超过脚尖' });
+    } else {
+        tasks.daily.push({ title: '日常运动：快走 30 分钟', desc: '步速 5-6km/h，晚饭后 1 小时进行' });
+    }
+    if (d.aiTests.language.score < 80) {
+        tasks.daily.push({ title: '认知训练：朗读短文', desc: '朗读报纸/书籍片段 5 分钟，锻炼语言流畅度' });
+    } else {
+        tasks.weekly.push({ title: '认知维护：益智游戏', desc: '玩拼图、数独等游戏 1 次，每次 15 分钟' });
+    }
+    if (nutritionScore < 80) {
+        tasks.daily.push({ title: '营养补充：优质蛋白', desc: '早餐 1 个鸡蛋 +1 杯低脂牛奶，保证蛋白质摄入' });
+        tasks.weekly.push({ title: '营养监测：体重记录', desc: '每周固定时间（晨起空腹）测量体重 1 次' });
+    } else {
+        tasks.weekly.push({ title: '营养维持：均衡饮食', desc: '每周至少吃 2 次鱼类，补充不饱和脂肪酸' });
+    }
+    if (moodScore < 80) {
+        tasks.daily.push({ title: '情绪调节：深呼吸放松', desc: '早晚各 1 次，每次 5 分钟，缓解压力' });
+        tasks.weekly.push({ title: '社交活动：与人交流', desc: '每周与亲友聊天/见面至少 2 次，避免孤独' });
+    } else {
+        tasks.weekly.push({ title: '社交维护：社区活动', desc: '参与社区老年活动 1 次，拓展社交圈' });
+    }
+    if (sensoryScore < 80) {
+        tasks.daily.push({ title: '感官保护：视力/听力护理', desc: '视力：做眼保健操 1 次；听力：避免噪音环境' });
+    }
+    tasks.daily.push({ title: '健康监测：基础指标记录', desc: '测量血压/血氧（如有设备），记录数值' });
+    tasks.weekly.push({ title: '健康复盘：任务完成情况', desc: '查看本周任务完成率，调整下周计划' });
+
+    renderTasks(tasks);
+
+    // 生成报告 HTML (5 行表格)
     const html = `
         <div style="text-align:center; border-bottom:2px solid #333; padding-bottom:20px; margin-bottom:20px;">
             <h3>老年人内在能力综合评估报告</h3>
             <p>依据：《老年人内在能力筛查与综合评估中国专家共识》& WHO ICOPE 指南</p>
-            <p>评估日期：${date} | 姓名：${d.basic.name} | 年龄：${d.basic.age}岁</p>
+            <p>评估日期：${date} | 姓名：${d.basic.name} | 年龄：${d.basic.age}岁 | 性别：${d.basic.gender}</p>
+            <p>BMI：${d.basic.bmi} | 慢性病史：${d.basic.diseases}</p>
         </div>
         
         <table class="report-table">
             <thead>
-                <tr><th>WHO 五维指标</th><th>测量方式</th><th>得分</th><th>评估结论</th></tr>
+                <tr><th>评估维度</th><th>测量方式</th><th>得分</th><th>评估结论</th></tr>
             </thead>
             <tbody>
-                <tr>
-                    <td><strong>1. 认知能力</strong></td>
-                    <td>AI 语音识别</td>
-                    <td>${d.aiTests.language.score}/100</td>
-                    <td class="${isRisk(d.aiTests.language.score)}">${riskText(d.aiTests.language.score)}</td>
-                </tr>
-                <tr>
-                    <td><strong>2. 行动能力</strong></td>
-                    <td>AI 视觉 (5 次坐站)</td>
-                    <td>${d.aiTests.action.score}/100</td>
-                    <td class="${isRisk(d.aiTests.action.score)}">${riskText(d.aiTests.action.score)}</td>
-                </tr>
-                <tr>
-                    <td><strong>3. 活力/步速</strong></td>
-                    <td>AI 视觉 (4 米行走)</td>
-                    <td>${d.aiTests.gait.score}/100</td>
-                    <td class="${isRisk(d.aiTests.gait.score)}">${riskText(d.aiTests.gait.score)}</td>
-                </tr>
-                <tr>
-                    <td><strong>4. 感官功能</strong></td>
-                    <td>标准化问卷</td>
-                    <td>${Math.round(sensoryScore)}/100</td>
-                    <td class="${isRisk(sensoryScore)}">${riskText(sensoryScore)}</td>
-                </tr>
-                <tr>
-                    <td><strong>5. 心理活力</strong></td>
-                    <td>PHQ-2 量表</td>
-                    <td>${Math.round(moodScore)}/100</td>
-                    <td class="${isRisk(moodScore)}">${riskText(moodScore)}</td>
-                </tr>
-                <tr>
-                    <td><strong>6. 营养状况</strong></td>
-                    <td>BMI+ 问卷</td>
-                    <td>${Math.round(nutritionScore)}/100</td>
-                    <td class="${isRisk(nutritionScore)}">${riskText(nutritionScore)}</td>
-                </tr>
+                <tr><td><strong>1. 身体机能</strong></td><td>AI 视觉 (坐站 + 步速)</td><td>${physicalScore}/100</td><td class="${getRiskClass(physicalScore)}">${getRiskText(physicalScore)}</td></tr>
+                <tr><td><strong>2. 认知功能</strong></td><td>AI 语音识别</td><td>${d.aiTests.language.score}/100</td><td class="${getRiskClass(d.aiTests.language.score)}">${getRiskText(d.aiTests.language.score)}</td></tr>
+                <tr><td><strong>3. 营养状况</strong></td><td>BMI+ 问卷</td><td>${nutritionScore}/100</td><td class="${getRiskClass(nutritionScore)}">${getRiskText(nutritionScore)}</td></tr>
+                <tr><td><strong>4. 心理健康</strong></td><td>PHQ-2 量表</td><td>${moodScore}/100</td><td class="${getRiskClass(moodScore)}">${getRiskText(moodScore)}</td></tr>
+                <tr><td><strong>5. 社会交往</strong></td><td>感官功能问卷</td><td>${sensoryScore}/100</td><td class="${getRiskClass(sensoryScore)}">${getRiskText(sensoryScore)}</td></tr>
             </tbody>
         </table>
         
@@ -805,22 +1036,45 @@ function generateReport() {
             <hr>
             <h4>💡 个性化干预建议</h4>
             <ul>
-                <li>${d.aiTests.action.score < 80 ? '⚠️ <strong>行动：</strong>建议进行平衡训练，预防跌倒。' : '✅ <strong>行动：</strong>保持当前活动水平。'}</li>
-                <li>${moodScore < 70 ? '⚠️ <strong>心理：</strong>建议增加社交活动，必要时心理咨询。' : '✅ <strong>心理：</strong>情绪状态良好。'}</li>
-                <li>${nutritionScore < 70 ? '⚠️ <strong>营养：</strong>建议营养科就诊，调整饮食。' : '✅ <strong>营养：</strong>保持均衡饮食。'}</li>
-                <li>📌 建议每 3 个月复测一次，动态监测能力变化。</li>
+                <li>${physicalScore < 80 ? '⚠️ <strong>身体机能：</strong>建议进行平衡训练、太极等低强度运动，预防跌倒。' : '✅ <strong>身体机能：</strong>保持当前活动水平，每周至少 3 次轻度运动。'}</li>
+                <li>${moodScore < 70 ? '⚠️ <strong>心理健康：</strong>建议增加社交活动，参与社区老年课堂，必要时寻求心理咨询。' : '✅ <strong>心理健康：</strong>情绪状态良好，建议继续保持社交互动。'}</li>
+                <li>${nutritionScore < 70 ? '⚠️ <strong>营养状况：</strong>建议营养科就诊，调整饮食结构，保证蛋白质和维生素摄入。' : '✅ <strong>营养状况：</strong>保持均衡饮食，规律三餐。'}</li>
+                <li>${sensoryScore < 70 ? '⚠️ <strong>社会交往：</strong>建议验光配镜/听力检测，改善视听功能以促进社交。' : '✅ <strong>社会交往：</strong>视听功能良好，建议多参与社区活动。'}</li>
+                <li>📌 建议每 3 个月复测一次，动态监测内在能力变化。</li>
             </ul>
         </div>
         
         <div style="margin-top:20px; padding:15px; background:#fff3cd; border-radius:6px; font-size:0.9rem;">
-            <strong>⚠️ 免责声明：</strong>本评估结果仅供参考，不能替代专业医疗诊断。
+            <strong>⚠️ 免责声明：</strong>本评估结果基于 AI 算法和标准化问卷生成，仅供参考，不能替代专业医疗诊断。如有健康问题，请及时咨询医生。
         </div>
     `;
     
     document.getElementById('reportContent').innerHTML = html;
 }
+
+function renderTasks(tasks) {
+    const dailyContainer = document.getElementById('dailyTasks');
+    const weeklyContainer = document.getElementById('weeklyTasks');
+    dailyContainer.innerHTML = '';
+    weeklyContainer.innerHTML = '';
+    tasks.daily.forEach((task, index) => {
+        const taskEl = document.createElement('div');
+        taskEl.className = 'task-item';
+        taskEl.innerHTML = `<input type="checkbox" id="daily-task-${index}"><div><label for="daily-task-${index}">${task.title}</label><div class="task-desc">${task.desc}</div></div>`;
+        dailyContainer.appendChild(taskEl);
+        const checkbox = taskEl.querySelector('input[type="checkbox"]');
+        checkbox.addEventListener('change', function() { if (this.checked) taskEl.classList.add('checked'); else taskEl.classList.remove('checked'); });
+    });
+    tasks.weekly.forEach((task, index) => {
+        const taskEl = document.createElement('div');
+        taskEl.className = 'task-item';
+        taskEl.innerHTML = `<input type="checkbox" id="weekly-task-${index}"><div><label for="weekly-task-${index}">${task.title}</label><div class="task-desc">${task.desc}</div></div>`;
+        weeklyContainer.appendChild(taskEl);
+        const checkbox = taskEl.querySelector('input[type="checkbox"]');
+        checkbox.addEventListener('change', function() { if (this.checked) taskEl.classList.add('checked'); else taskEl.classList.remove('checked'); });
+    });
+}
 </script>
 
 </body>
 </html>
-
