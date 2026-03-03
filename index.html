@@ -2,123 +2,159 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>老年人内在能力 AI 评估系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>长者全维健康能力 AI 评估系统 (创新版)</title>
     <!-- 引入 MediaPipe 依赖 -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
-    <!-- 引入 Chart.js (指定稳定版本 v3.9.1) -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <!-- 引入 Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" crossorigin="anonymous"></script>
     <style>
         :root {
             --primary: #2E86AB;
-            --accent: #A23B72;
+            --accent: #D35400;
             --success: #27ae60;
-            --warning: #f39c12;
-            --danger: #c0392b;
+            --bg-color: #FDFBF7;
+            --text-color: #2C3E50;
+            --card-bg: #ffffff;
         }
         body {
-            font-family: "Microsoft YaHei", sans-serif;
-            background: #F4F7F6;
+            font-family: "Microsoft YaHei", "Heiti SC", sans-serif;
+            background: var(--bg-color);
             margin: 0;
-            font-size: 18px;
+            font-size: 20px;
+            color: var(--text-color);
+            line-height: 1.6;
         }
         header {
-            background: var(--primary);
+            background: linear-gradient(135deg, #2E86AB 0%, #1A5276 100%);
             color: white;
-            padding: 20px;
+            padding: 30px 20px;
             text-align: center;
+            border-bottom: 5px solid #F39C12;
         }
+        header h1 { margin: 0; font-size: 2.2rem; letter-spacing: 2px; }
+        header p { font-size: 1.2rem; opacity: 0.9; margin-top: 10px; }
+        
         .container {
-            max-width: 950px;
-            margin: 20px auto;
-            padding: 20px;
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px 40px;
         }
         .card {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            border-top: 5px solid var(--primary);
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            border: 1px solid #e0e0e0;
         }
         .step-badge {
-            background: var(--primary);
+            background: var(--accent);
             color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
             display: inline-block;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        h2 { color: var(--primary); margin-top: 0; }
+        h2 { color: var(--primary); margin-top: 0; font-size: 1.8rem; border-bottom: 2px solid #eee; padding-bottom: 15px; }
         h3 { 
             color: var(--accent); 
-            border-left: 4px solid var(--accent); 
-            padding-left: 10px; 
-            margin-top: 25px;
-            background: #f9f9f9;
-            padding: 10px 10px 10px 15px;
-            border-radius: 0 8px 8px 0;
+            font-size: 1.4rem;
+            margin-top: 30px;
+            background: #FFF3E0;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-left: 5px solid var(--accent);
         }
         
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             display: flex;
             align-items: center;
             flex-wrap: wrap;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
         }
         .form-group label {
-            flex: 0 0 140px;
+            flex: 0 0 160px;
             font-weight: bold;
+            font-size: 1.2rem;
+            color: #333;
         }
         .form-group input, .form-group select {
             flex: 1;
-            padding: 12px;
-            font-size: 1.1rem;
-            border: 2px solid #ddd;
-            border-radius: 6px;
+            padding: 15px;
+            font-size: 1.2rem;
+            border: 2px solid #ccc;
+            border-radius: 8px;
             min-width: 200px;
+            background: white;
         }
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(46, 134, 171, 0.2);
+        }
+        
         .bmi-box {
-            background: #eef2f5;
+            background: #E8F6F3;
+            color: #16A085;
             padding: 10px 20px;
-            border-radius: 6px;
+            border-radius: 8px;
             font-weight: bold;
-            color: var(--primary);
+            font-size: 1.2rem;
             margin-left: 15px;
+            border: 1px solid #16A085;
         }
         
         .btn {
-            background: var(--accent);
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 15px 35px;
-            font-size: 1.2rem;
+            padding: 18px 40px;
+            font-size: 1.3rem;
             border-radius: 50px;
             cursor: pointer;
-            margin: 10px 5px;
-            transition: background 0.3s;
+            margin: 15px 10px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-weight: bold;
         }
         .btn:hover:not(:disabled) {
-            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+            background: #1A5276;
         }
-        .btn:disabled { background: #ccc; cursor: not-allowed; }
-        .btn-next { background: var(--primary); }
+        .btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        .btn-next { background: var(--accent); }
         .btn-success { background: var(--success); }
         
         .test-section {
-            background: #f9f9f9;
-            padding: 20px;
-            border-radius: 8px;
+            background: #FDFBF7;
+            padding: 25px;
+            border-radius: 12px;
             margin: 20px 0;
-            border: 2px dashed #ddd;
+            border: 2px dashed #ccc;
         }
         .test-section.complete {
             border: 2px solid var(--success);
-            background: #e8f8f0;
+            background: #E8F8F0;
         }
+        .instruction-box {
+            background: #FFF;
+            border-left: 5px solid var(--primary);
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 1.1rem;
+            color: #555;
+        }
+        .instruction-box strong { color: var(--accent); }
         
         #videoElement, #videoElement2 {
             width: 100%;
@@ -128,6 +164,8 @@
             display: none;
             margin: 15px auto;
             transform: scaleX(-1);
+            border: 4px solid #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         #output_canvas, #output_canvas2 {
             width: 100%;
@@ -136,399 +174,540 @@
             display: none;
             margin: 15px auto;
             transform: scaleX(-1);
+            border: 4px solid #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         
         .status-box {
-            padding: 15px;
+            padding: 20px;
             background: white;
-            border-radius: 6px;
+            border-radius: 10px;
             margin: 15px 0;
             font-weight: bold;
+            font-size: 1.2rem;
+            text-align: center;
+            border: 1px solid #eee;
         }
-        .status-waiting { color: #666; }
-        .status-running { color: var(--warning); }
-        .status-done { color: var(--success); }
-        .status-error { color: var(--danger); }
+        .status-waiting { color: #666; background: #f9f9f9; }
+        .status-running { color: var(--accent); background: #FFF3E0; animation: pulse 2s infinite; }
+        .status-done { color: var(--success); background: #E8F8F0; }
+        .status-error { color: var(--danger); background: #FDEDEC; }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
         
         .progress-bar {
             width: 100%;
-            height: 10px;
-            background: #ddd;
-            border-radius: 5px;
-            margin: 10px 0;
+            height: 20px;
+            background: #eee;
+            border-radius: 10px;
+            margin: 15px 0;
             overflow: hidden;
+            border: 1px solid #ddd;
         }
         .progress-fill {
             height: 100%;
-            background: var(--success);
+            background: linear-gradient(90deg, var(--success), #2ecc71);
             width: 0%;
             transition: width 0.3s;
         }
         
-        .report-table {
+        /* 新版问卷样式 - 闯关卡片式 */
+        .questionnaire-section {
+            background: #fff;
+            border: 2px solid #E8F6F3;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        .section-title {
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            background: #E8F6F3;
+            padding: 10px 15px;
+            border-radius: 8px;
+        }
+        .section-title span {
+            background: var(--primary);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .question-card {
+            background: #FDFBF7;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border-left: 5px solid var(--accent);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .question-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--accent);
+            opacity: 0.1;
+        }
+        .question-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .question-card label {
+            display: block;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #333;
+            line-height: 1.5;
+        }
+        .question-card select {
             width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
+            padding: 15px;
+            font-size: 1.1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%232E86AB%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px top 50%;
+            background-size: 12px auto;
         }
-        .report-table th, .report-table td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        .report-table th { background: #f2f2f2; }
-        
-        .risk-low { color: var(--success); font-weight: bold; }
-        .risk-mid { color: var(--warning); font-weight: bold; }
-        .risk-high { color: var(--danger); font-weight: bold; }
-        
+
         .test-nav {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 15px;
+            margin-bottom: 25px;
             flex-wrap: wrap;
         }
         .test-nav button {
             flex: 1;
-            min-width: 150px;
-            padding: 12px;
+            min-width: 140px;
+            padding: 15px;
             background: #eee;
             border: none;
-            border-radius: 6px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 1rem;
-            transition: background 0.3s;
-        }
-        .test-nav button:hover:not(.active):not(.completed) {
-            background: #ddd;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            color: #555;
         }
         .test-nav button.active {
             background: var(--primary);
             color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(46, 134, 171, 0.3);
         }
         .test-nav button.completed {
             background: var(--success);
             color: white;
         }
 
-        .questionnaire-section {
-            background: #fff;
-            border: 2px solid var(--primary);
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        .questionnaire-section h3 {
-            margin-top: 0;
-            background: var(--primary);
-            color: white;
-            border-left: none;
-            padding: 10px 15px;
-            border-radius: 8px 8px 0 0;
-        }
-        .question-item {
-            background: #f8f9fa;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 6px;
-            border-left: 4px solid var(--accent);
-        }
-        .question-item label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        .question-item select {
-            width: 100%;
-            padding: 10px;
-            font-size: 1rem;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-        }
-
-        .task-list {
-            margin-top: 15px;
-        }
+        .task-list { margin-top: 15px; }
         .task-item {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             background: white;
-            padding: 12px 15px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            transition: all 0.3s;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
         }
         .task-item.checked {
-            background: #e8f8f0;
-            color: #27ae60;
-            text-decoration: line-through;
+            background: #E8F8F0;
+            border-color: var(--success);
+            opacity: 0.8;
         }
         .task-item input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            margin-right: 12px;
+            width: 24px;
+            height: 24px;
+            margin-right: 15px;
+            margin-top: 5px;
             cursor: pointer;
         }
         .task-item label {
             flex: 1;
             cursor: pointer;
-            font-weight: normal;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #333;
         }
         .task-item .task-desc {
-            font-size: 0.9rem;
+            font-size: 1rem;
             color: #666;
-            margin-top: 3px;
+            margin-top: 5px;
+            display: block;
+            font-weight: normal;
         }
 
         .loading-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255,255,255,0.9);
+            background: rgba(255,255,255,0.95);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 9999;
+            flex-direction: column;
         }
         .loading-spinner {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid var(--primary);
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid var(--primary);
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* 修复图表容器样式 */
         .chart-container {
             position: relative;
-            height: 400px; /* 固定高度防止塌陷 */
+            height: 450px;
             width: 100%;
-            margin: 0 auto 20px;
-            max-width: 600px;
+            margin: 0 auto 30px;
+            max-width: 700px;
         }
 
         @media print {
-            .btn, header, .no-print, .test-nav, .loading-overlay { display: none; }
-            .card { box-shadow: none; border: 1px solid #ccc; }
+            .btn, header, .no-print, .test-nav, .loading-overlay { display: none !important; }
+            .card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+            body { background: white; font-size: 14pt; }
+        }
+        @media (max-width: 600px) {
+            .form-group { flex-direction: column; align-items: flex-start; }
+            .form-group label { margin-bottom: 10px; }
+            .form-group input, .form-group select { width: 100%; box-sizing: border-box; }
+            .btn { width: 100%; margin: 10px 0; }
+            header h1 { font-size: 1.5rem; }
         }
     </style>
 </head>
 <body>
 
 <div id="loadingOverlay" class="loading-overlay">
-    <div style="text-align:center;">
-        <div class="loading-spinner"></div>
-        <p style="margin-top:15px; font-weight:bold; color:var(--primary);">正在生成报告，请稍候...</p>
-    </div>
+    <div class="loading-spinner"></div>
+    <p style="margin-top:20px; font-size:1.5rem; font-weight:bold; color:var(--primary);">正在为您生成健康报告，请稍候...</p>
+    <p style="color:#666;">AI 正在分析您的各项数据</p>
 </div>
 
 <header>
-    <h1>👴👵 老年人内在能力 AI 评估系统</h1>
-    <p>基于 ICOPE 标准 · 多模态客观测量 · 本土化专家共识</p>
+    <h1>👴 长者全维健康能力 AI 评估系统</h1>
+    <p>基于 WHO ICOPE 标准 · 智能辅助 · 关爱您的健康</p>
 </header>
 
 <div class="container">
 
     <!-- 步骤 1: 基础信息 -->
     <div class="card" id="step1">
-        <span class="step-badge">步骤 1/4</span>
-        <h2>📝 基础信息采集</h2>
+        <span class="step-badge">第一步：基本信息登记</span>
+        <h2>📝 请填写您的基本情况</h2>
+        <p style="color:#666; font-size:1rem;">* 请放心，您的信息仅用于本次评估，不会泄露。</p>
+        
         <div class="form-group">
-            <label>姓名：</label>
-            <input type="text" id="userName" placeholder="请输入姓名">
+            <label>您的姓名：</label>
+            <input type="text" id="userName" placeholder="例如：王建国">
         </div>
         <div class="form-group">
-            <label>年龄：</label>
+            <label>今年高寿：</label>
             <input type="number" id="userAge" placeholder="岁" style="max-width:100px;" min="60" max="120">
+            <span style="margin-left:10px; color:#666;">岁</span>
         </div>
         <div class="form-group">
             <label>性别：</label>
             <select id="userGender">
-                <option value="男">男</option>
-                <option value="女">女</option>
+                <option value="男">男士</option>
+                <option value="女">女士</option>
             </select>
         </div>
         <div class="form-group">
-            <label>身高 (cm)：</label>
+            <label>身高 (厘米)：</label>
             <input type="number" id="userHeight" placeholder="cm" style="max-width:150px;" oninput="calcBMI()" min="100" max="250">
         </div>
         <div class="form-group">
-            <label>体重 (kg)：</label>
+            <label>体重 (公斤)：</label>
             <input type="number" id="userWeight" placeholder="kg" style="max-width:150px;" oninput="calcBMI()" min="30" max="200">
             <div id="bmiResult" class="bmi-box">BMI: --</div>
         </div>
         <div class="form-group">
             <label>慢性病史：</label>
-            <input type="text" id="userDiseases" placeholder="如：高血压、糖尿病 (无则填无)">
+            <input type="text" id="userDiseases" placeholder="如：高血压、糖尿病 (没有请填写无)">
         </div>
-        <button class="btn btn-next" onclick="goToStep(2)">下一步：AI 核心测试</button>
+        <div class="form-group">
+            <label>居住情况：</label>
+            <select id="userLiving">
+                <option value="alone">独居</option>
+                <option value="spouse">与配偶同住</option>
+                <option value="family">与子女/家人同住</option>
+                <option value="nursing">养老机构</option>
+            </select>
+        </div>
+        <div style="text-align:center; margin-top:30px;">
+            <button class="btn btn-next" onclick="goToStep(2)">下一步：开始健康小测试</button>
+        </div>
     </div>
 
     <!-- 步骤 2: AI 核心测试 -->
     <div class="card" id="step2" style="display:none;">
-        <span class="step-badge">步骤 2/4</span>
-        <h2>🤖 AI 核心能力测试 (客观测量)</h2>
-        <p style="color:#666;">* 以下测试通过摄像头和麦克风自动采集数据，减少主观偏差</p>
+        <span class="step-badge">第二步：AI 智能健康小测试</span>
+        <h2>🤖 让我们动一动，测一测</h2>
+        <p style="color:#666; font-size:1.1rem;">* 以下测试通过摄像头辅助，就像有一双眼睛在帮您计数，非常安全。</p>
         
         <div class="test-nav">
-            <button id="nav-test1" class="active" onclick="showTest(1)">1️⃣ 语言认知</button>
-            <button id="nav-test2" onclick="showTest(2)">2️⃣ 行动能力</button>
-            <button id="nav-test3" onclick="showTest(3)">3️⃣ 活力步速</button>
+            <button id="nav-test1" class="active" onclick="showTest(1)">1️⃣ 说话清晰度</button>
+            <button id="nav-test2" onclick="showTest(2)">2️⃣ 腿部力量</button>
+            <button id="nav-test3" onclick="showTest(3)">3️⃣ 走路速度</button>
         </div>
 
         <div id="test1" class="test-section">
-            <h3>🗣️ 语言认知测试</h3>
-            <p>请清晰朗读以下句子，系统将自动评估语言流畅度</p>
-            <div style="background:white; padding:20px; border-radius:8px; font-size:1.4rem; font-weight:bold; margin:15px 0;">
-                "今天的天气很好，我想去公园散步，看看花草树木。"
+            <h3>🗣️ 语言与认知小测试</h3>
+            <div class="instruction-box">
+                <p><strong>请这样做：</strong></p>
+                <p>1. 请点击下方的“开始录音”按钮。</p>
+                <p>2. 用您平时说话的音量，清晰朗读屏幕上的这句话。</p>
+                <p>3. 读完即可，不用紧张。</p>
             </div>
-            <div id="langStatus" class="status-box status-waiting">状态：等待开始</div>
+            <div style="background:white; padding:25px; border-radius:10px; font-size:1.6rem; font-weight:bold; margin:20px 0; text-align:center; border:2px solid #eee; color:#333;">
+                “今天的天气很好，我想去公园散步，看看花草树木。”
+            </div>
+            <div id="langStatus" class="status-box status-waiting">状态：准备就绪</div>
             <button id="btnLang" class="btn" onclick="startLangTest()">🎤 开始录音测试</button>
         </div>
 
         <div id="test2" class="test-section" style="display:none;">
-            <h3>🏃 行动能力测试 (5 次椅子站立)</h3>
-            <p>请面对摄像头，双手抱胸，从椅子上完成 5 次起立坐下动作</p>
+            <h3>🏃 腿部力量测试 (坐站测试)</h3>
+            <div class="instruction-box">
+                <p><strong>⚠️ 安全提示：请确保椅子稳固，旁边最好有人看护。</strong></p>
+                <p><strong>请这样做：</strong></p>
+                <p>1. 坐在没有扶手的椅子上，背部挺直。</p>
+                <p>2. 双手交叉抱在胸前（像图片中一样）。</p>
+                <p>3. 听到开始后，完全站起来，再完全坐下，重复 <strong>5 次</strong>。</p>
+                <p>4. 如果感到头晕或不适，请立即停止。</p>
+            </div>
             <video id="videoElement" autoplay playsinline></video>
             <canvas id="output_canvas"></canvas>
             <div id="actionStatus" class="status-box status-waiting">状态：等待开始</div>
             <div class="progress-bar"><div id="actionProgress" class="progress-fill"></div></div>
-            <div id="actionCount" style="font-size:1.5rem; font-weight:bold; color:var(--primary);">完成次数：0/5</div>
+            <div id="actionCount" style="font-size:1.8rem; font-weight:bold; color:var(--primary); text-align:center;">完成次数：0/5</div>
             <button id="btnAction" class="btn" onclick="startActionTest()">📹 开启摄像头测试</button>
         </div>
 
         <div id="test3" class="test-section" style="display:none;">
-            <h3>🚶 活力/步速测试 (4 米行走)</h3>
-            <p>请在摄像头前行走 4 米距离，系统将自动计算步速</p>
-            <p style="color:#666; font-size:0.9rem;">* 需要约 4 米空间，请确保安全</p>
+            <h3>🚶 活力步速测试 (4 米行走)</h3>
+            <div class="instruction-box">
+                <p><strong>⚠️ 安全提示：请确保前方 4 米内没有障碍物，地面防滑。</strong></p>
+                <p><strong>请这样做：</strong></p>
+                <p>1. 站在摄像头前约 2-3 米处。</p>
+                <p>2. 听到开始后，以您<strong>平常走路的速度</strong>，直线向前走约 4 米（大约 5-6 步）。</p>
+                <p>3. 走到尽头后停下即可。</p>
+            </div>
+            <p style="color:#666; font-size:1rem; text-align:center;">* 需要约 4 米空间，请确保安全</p>
             <video id="videoElement2" autoplay playsinline></video>
             <canvas id="output_canvas2"></canvas>
             <div id="gaitStatus" class="status-box status-waiting">状态：等待开始</div>
             <div class="progress-bar"><div id="gaitProgress" class="progress-fill"></div></div>
-            <div id="gaitSpeed" style="font-size:1.5rem; font-weight:bold; color:var(--primary);">步速：-- m/s</div>
+            <div id="gaitSpeed" style="font-size:1.8rem; font-weight:bold; color:var(--primary); text-align:center;">步速：-- m/s</div>
             <button id="btnGait" class="btn" onclick="startGaitTest()">📹 开启摄像头测试</button>
         </div>
 
-        <div style="margin-top:30px; text-align:center;">
-            <button id="btnToStep3" class="btn btn-next" disabled onclick="goToStep(3)">✅ 全部完成，进入问卷</button>
+        <div style="margin-top:40px; text-align:center;">
+            <button id="btnToStep3" class="btn btn-next" disabled onclick="goToStep(3)">✅ 测试全部完成，填写问卷</button>
         </div>
     </div>
 
-    <!-- 步骤 3: 标准化问卷 -->
+    <!-- 步骤 3: 标准化问卷 (创新升级版) -->
     <div class="card" id="step3" style="display:none;">
-        <span class="step-badge">步骤 3/4</span>
-        <h2>📋 标准化健康问卷</h2>
-        <p style="color:#666; background:#fff3cd; padding:10px; border-radius:6px;">
-            ℹ️ 以下问卷基于 WHO ICOPE 标准，请老人或家属如实填写
+        <span class="step-badge">第三步：全方位生活能力问卷</span>
+        <h2>📋 聊聊您的日常生活</h2>
+        <p style="color:#666; background:#FFF3E0; padding:15px; border-radius:8px; border-left:5px solid var(--accent);">
+            ℹ️ 这些问题没有对错，就像聊天一样，请根据您的真实感受选择。
         </p>
         
         <div class="questionnaire-section">
-            <h3>👁️ 感官功能评估 (影响社会交往)</h3>
-            <div class="question-item">
-                <label>1. 视力测试：不戴眼镜时，能否看清一臂距离的手机文字？</label>
-                <select id="q_vision">
-                    <option value="2">✅ 能看清 (2 分)</option>
-                    <option value="1">⚠️ 有点模糊 (1 分)</option>
-                    <option value="0">❌ 看不清 (0 分)</option>
+            <div class="section-title"><span>1</span> 🧠 脑力与心情 (认知 + 心理)</div>
+            
+            <div class="question-card">
+                <label>1. 【记忆力】最近半年，您是否经常忘记刚放下的东西放在哪里，或者刚说过的话？</label>
+                <select id="q_memory">
+                    <option value="0">✅ 很少忘记，记性挺好 (0 分)</option>
+                    <option value="1">⚠️ 偶尔忘记，但能想起来 (1 分)</option>
+                    <option value="2">❌ 经常忘记，甚至忘记重要事情 (2 分)</option>
                 </select>
             </div>
-            <div class="question-item">
-                <label>2. 听力测试：不戴助听器时，能否听清正常音量的对话？</label>
-                <select id="q_hearing">
-                    <option value="2">✅ 能听清 (2 分)</option>
-                    <option value="1">⚠️ 需要重复 (1 分)</option>
-                    <option value="0">❌ 听不清 (0 分)</option>
+            <div class="question-card">
+                <label>2. 【方向感】您是否清楚今天是星期几？能否独自去熟悉的超市或菜市场？</label>
+                <select id="q_orientation">
+                    <option value="0">✅ 很清楚，能独自去 (0 分)</option>
+                    <option value="1">⚠️ 有时需要看日历或家人提醒 (1 分)</option>
+                    <option value="2">❌ 经常搞混，不敢独自出门 (2 分)</option>
                 </select>
             </div>
-        </div>
-        
-        <div class="questionnaire-section">
-            <h3>🧠 心理活力评估</h3>
-            <p style="color:#666; font-size:0.9rem;">* 基于 PHQ-2 抑郁筛查量表</p>
-            <div class="question-item">
-                <label>3. 过去 2 周，是否经常感到情绪低落、沮丧或无望？</label>
-                <select id="q_mood1">
-                    <option value="0">✅ 完全不会 (0 分)</option>
-                    <option value="1">⚠️ 偶尔几天 (1 分)</option>
-                    <option value="2">❌ 经常如此 (2 分)</option>
-                </select>
-            </div>
-            <div class="question-item">
-                <label>4. 过去 2 周，是否对做事情提不起兴趣或乐趣？</label>
-                <select id="q_mood2">
-                    <option value="0">✅ 完全不会 (0 分)</option>
-                    <option value="1">⚠️ 偶尔几天 (1 分)</option>
-                    <option value="2">❌ 经常如此 (2 分)</option>
-                </select>
-            </div>
-            <div class="question-item">
-                <label>5. 近期是否感到容易疲劳、精力不足？</label>
-                <select id="q_energy">
-                    <option value="0">✅ 精力充沛 (0 分)</option>
-                    <option value="1">⚠️ 有时疲劳 (1 分)</option>
-                    <option value="2">❌ 经常疲劳 (2 分)</option>
+            <div class="question-card">
+                <label>3. 【情绪】过去 2 周，您是否感到心情低落，或者对以前喜欢的事情（如看电视、下棋）没兴趣了？</label>
+                <select id="q_mood">
+                    <option value="0">✅ 心情不错，兴趣依旧 (0 分)</option>
+                    <option value="1">⚠️ 偶尔觉得没意思 (1 分)</option>
+                    <option value="2">❌ 经常感到低落、没劲 (2 分)</option>
                 </select>
             </div>
         </div>
         
         <div class="questionnaire-section">
-            <h3>🍎 营养状况评估</h3>
-            <div class="question-item">
-                <label>6. 过去 3 个月体重是否有明显变化？</label>
-                <select id="q_weight">
-                    <option value="0">✅ 无明显变化 (0 分)</option>
-                    <option value="2">⚠️ 下降 3kg 以上 (2 分)</option>
-                    <option value="1">⚠️ 增加 3kg 以上 (1 分)</option>
+            <div class="section-title"><span>2</span> 🏠 生活与自理 (营养 + 行动 + 睡眠)</div>
+            
+            <div class="question-card">
+                <label>4. 【饮食】您的食欲和体重最近有变化吗？是否因为牙齿不好而避免吃某些食物（如肉、水果）？</label>
+                <select id="q_nutrition">
+                    <option value="0">✅ 食欲好，体重稳定，啥都能吃 (0 分)</option>
+                    <option value="1">⚠️ 食欲一般，或因为牙齿避开硬食 (1 分)</option>
+                    <option value="2">❌ 食欲差，或体重明显下降 (2 分)</option>
                 </select>
             </div>
-            <div class="question-item">
-                <label>7. 近期食欲如何？</label>
-                <select id="q_appetite">
-                    <option value="0">✅ 食欲正常 (0 分)</option>
-                    <option value="1">⚠️ 食欲一般 (1 分)</option>
-                    <option value="2">❌ 食欲明显下降 (2 分)</option>
+            <div class="question-card">
+                <label>5. 【自理】您能否独立完成以下事情：自己洗澡、自己剪脚趾甲、自己穿衣？</label>
+                <select id="q_adl">
+                    <option value="0">✅ 都能独立完成 (0 分)</option>
+                    <option value="1">⚠️ 剪脚趾甲或洗澡需要帮忙 (1 分)</option>
+                    <option value="2">❌ 穿衣或洗澡需要大量协助 (2 分)</option>
+                </select>
+            </div>
+            <div class="question-card">
+                <label>6. 【睡眠与疼痛】您晚上的睡眠质量如何？是否经常因为疼痛（关节痛、腰痛等）而睡不好？</label>
+                <select id="q_sleep_pain">
+                    <option value="0">✅ 睡得香，无疼痛困扰 (0 分)</option>
+                    <option value="1">⚠️ 偶尔失眠或有轻微疼痛 (1 分)</option>
+                    <option value="2">❌ 经常失眠或疼痛严重影响睡眠 (2 分)</option>
+                </select>
+            </div>
+             <div class="question-card">
+                <label>7. 【排泄控制】您是否有尿频、尿急，或者偶尔控制不住小便的情况？</label>
+                <select id="q_incontinence">
+                    <option value="0">✅ 控制很好，无困扰 (0 分)</option>
+                    <option value="1">⚠️ 偶尔有尿急，但能控制住 (1 分)</option>
+                    <option value="2">❌ 经常尿急或有过失禁 (2 分)</option>
                 </select>
             </div>
         </div>
 
-        <button class="btn btn-next" onclick="goToStep(4)">生成综合报告</button>
+        <div class="questionnaire-section">
+            <div class="section-title"><span>3</span> 🛡️ 安全与环境 (跌倒风险 + 社会支持)</div>
+            
+            <div class="question-card">
+                <label>8. 【跌倒史】过去一年内，您是否发生过跌倒？或者走路时是否担心会摔倒？</label>
+                <select id="q_fall">
+                    <option value="0">✅ 没跌倒过，走路很稳 (0 分)</option>
+                    <option value="1">⚠️ 没跌倒但有点担心 (1 分)</option>
+                    <option value="2">❌ 过去一年跌倒过 1 次或以上 (2 分)</option>
+                </select>
+            </div>
+            <div class="question-card">
+                <label>9. 【居家安全】您家里的地面是否平整（无地毯、无杂物）？浴室是否有扶手？</label>
+                <select id="q_home_safe">
+                    <option value="0">✅ 地面平整，浴室有扶手 (0 分)</option>
+                    <option value="1">⚠️ 地面有些杂物，或浴室无扶手 (1 分)</option>
+                    <option value="2">❌ 地面不平/有地毯，浴室无扶手 (2 分)</option>
+                </select>
+            </div>
+            <div class="question-card">
+                <label>10. 【社交】您是否感到孤独？子女或亲友是否经常联系您？</label>
+                <select id="q_social">
+                    <option value="0">✅ 不孤独，经常有联系 (0 分)</option>
+                    <option value="1">⚠️ 有时觉得孤单 (1 分)</option>
+                    <option value="2">❌ 经常感到孤独，很少人联系 (2 分)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="questionnaire-section">
+            <div class="section-title"><span>4</span> 📱 现代生活能力 (数字 + 感官 + 用药)</div>
+            
+            <div class="question-card">
+                <label>11. 【数字能力】您能熟练使用智能手机吗？（如：微信视频、手机支付、看新闻）</label>
+                <select id="q_digital">
+                    <option value="0">✅ 很熟练，经常用 (0 分)</option>
+                    <option value="1">⚠️ 会用一些基本功能 (1 分)</option>
+                    <option value="2">❌ 完全不会用，或很抗拒 (2 分)</option>
+                </select>
+            </div>
+            <div class="question-card">
+                <label>12. 【精细动作】您的手部灵活吗？能轻松拧开矿泉水瓶盖、扣衣服扣子吗？</label>
+                <select id="q_fine_motor">
+                    <option value="0">✅ 很灵活，没问题 (0 分)</option>
+                    <option value="1">⚠️ 有点费力，但能完成 (1 分)</option>
+                    <option value="2">❌ 很困难，需要别人帮忙 (2 分)</option>
+                </select>
+            </div>
+            <div class="question-card">
+                <label>13. 【用药管理】如果您有慢性病，能自己分清早中晚的药，并按时服用吗？</label>
+                <select id="q_medication">
+                    <option value="0">✅ 能完全自己管理 (0 分)</option>
+                    <option value="1">⚠️ 需要家人提醒或分装 (1 分)</option>
+                    <option value="2">❌ 完全依赖家人喂药或管理 (2 分)</option>
+                </select>
+            </div>
+            <div class="question-card">
+                <label>14. 【口腔健康】您的牙齿状况如何？有无松动、疼痛或缺失影响吃饭？</label>
+                <select id="q_oral">
+                    <option value="0">✅ 牙齿好，咀嚼没问题 (0 分)</option>
+                    <option value="1">⚠️ 有少量缺失或轻微不适 (1 分)</option>
+                    <option value="2">❌ 缺失多或疼痛，影响进食 (2 分)</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="text-align:center; margin-top:30px;">
+            <button class="btn btn-success" onclick="goToStep(4)">🎉 生成我的健康报告</button>
+        </div>
     </div>
 
     <!-- 步骤 4: 报告 -->
     <div class="card" id="step4" style="display:none;">
-        <span class="step-badge">步骤 4/4</span>
-        <h2>📄 内在能力评估报告</h2>
+        <span class="step-badge">第四步：评估结果</span>
+        <h2>📄 您的内在能力评估报告</h2>
         
-        <!-- 修复：增加 chart-container 类名和固定高度 -->
         <div class="chart-container">
-            <h3 style="text-align: center; color: var(--primary);">📈 五大维度能力雷达图 (0-10 分)</h3>
+            <h3 style="text-align: center; color: var(--primary); font-size:1.3rem;">📈 六大维度能力雷达图 (满分 10 分)</h3>
             <canvas id="abilityRadarChart"></canvas>
         </div>
         
         <!-- 干预任务表容器 -->
-        <div style="background: #f5fafe; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: var(--primary); margin-top: 0;">✅ 个性化干预任务表</h3>
-            <p style="color: #666;">根据您的评估结果生成，完成后勾选即可标绿记录</p>
+        <div style="background: #FDFBF7; padding: 25px; border-radius: 12px; margin: 20px 0; border: 2px solid #E8F6F3;">
+            <h3 style="color: var(--primary); margin-top: 0; border:none; background:none; padding:0;">✅ 为您定制的健康任务表</h3>
+            <p style="color: #666; font-size:1rem;">完成一项任务后，请点击前面的方框打勾✅，记录您的健康努力！</p>
             <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px;">
                 <div style="flex: 1; min-width: 300px;">
-                    <h4 style="color: var(--accent); border-bottom: 2px solid #eee; padding-bottom: 10px;">每日任务</h4>
+                    <h4 style="color: var(--accent); border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top:0;">📅 每日必做</h4>
                     <div id="dailyTasks" class="task-list"></div>
                 </div>
                 <div style="flex: 1; min-width: 300px;">
-                    <h4 style="color: var(--accent); border-bottom: 2px solid #eee; padding-bottom: 10px;">每周任务</h4>
+                    <h4 style="color: var(--accent); border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top:0;">📆 每周建议</h4>
                     <div id="weeklyTasks" class="task-list"></div>
                 </div>
             </div>
         </div>
         
         <div id="reportContent"></div>
-        <div class="no-print">
-            <button class="btn btn-success" onclick="window.print()">🖨️ 打印/保存 PDF</button>
-            <button class="btn" style="background:#666;" onclick="location.reload()">🔄 重新评估</button>
+        <div class="no-print" style="text-align:center; margin-top:30px;">
+            <button class="btn btn-success" onclick="window.print()">🖨️ 打印报告 / 保存为 PDF</button>
+            <button class="btn" style="background:#95a5a6;" onclick="location.reload()">🔄 重新评估</button>
         </div>
     </div>
 
@@ -546,7 +725,8 @@ let data = {
     questionnaire: {}
 };
 
-let drawConnectors = window.drawConnectors || function() {};
+// 防御性编程：检查库是否加载
+let drawConnectors = window.drawConnectors || function() { console.warn('Drawing utils not loaded'); };
 let POSE_CONNECTIONS = window.POSE_CONNECTIONS || [];
 let pose = null;
 let camera = null;
@@ -560,7 +740,7 @@ function goToStep(step) {
         const name = document.getElementById('userName').value.trim();
         const age = document.getElementById('userAge').value.trim();
         if(!name || !age) {
-            alert('请填写完整的姓名和年龄信息！');
+            alert('请先填写姓名和年龄，方便我们为您建立档案！');
             return;
         }
         data.basic = {
@@ -570,35 +750,39 @@ function goToStep(step) {
             height: document.getElementById('userHeight').value || 0,
             weight: document.getElementById('userWeight').value || 0,
             bmi: document.getElementById('bmiResult').innerText,
-            diseases: document.getElementById('userDiseases').value || '无'
+            diseases: document.getElementById('userDiseases').value || '无',
+            living: document.getElementById('userLiving').value
         };
     }
     if(step === 4) {
         data.questionnaire = {
-            vision: parseInt(document.getElementById('q_vision').value),
-            hearing: parseInt(document.getElementById('q_hearing').value),
-            mood1: parseInt(document.getElementById('q_mood1').value),
-            mood2: parseInt(document.getElementById('q_mood2').value),
-            energy: parseInt(document.getElementById('q_energy').value),
-            weight: parseInt(document.getElementById('q_weight').value),
-            appetite: parseInt(document.getElementById('q_appetite').value)
+            memory: parseInt(document.getElementById('q_memory').value),
+            orientation: parseInt(document.getElementById('q_orientation').value),
+            mood: parseInt(document.getElementById('q_mood').value),
+            nutrition: parseInt(document.getElementById('q_nutrition').value),
+            adl: parseInt(document.getElementById('q_adl').value),
+            sleep_pain: parseInt(document.getElementById('q_sleep_pain').value),
+            incontinence: parseInt(document.getElementById('q_incontinence').value),
+            fall: parseInt(document.getElementById('q_fall').value),
+            home_safe: parseInt(document.getElementById('q_home_safe').value),
+            social: parseInt(document.getElementById('q_social').value),
+            digital: parseInt(document.getElementById('q_digital').value),
+            fine_motor: parseInt(document.getElementById('q_fine_motor').value),
+            medication: parseInt(document.getElementById('q_medication').value),
+            oral: parseInt(document.getElementById('q_oral').value)
         };
         
-        // 先显示加载层
         document.getElementById('loadingOverlay').style.display = 'flex';
-        
-        // 先切换页面显示，确保 DOM 存在
         document.querySelectorAll('.card').forEach(el => el.style.display = 'none');
         document.getElementById('step' + step).style.display = 'block';
         window.scrollTo(0, 0);
 
-        // 延迟执行生成逻辑，确保 DOM 渲染完成，解决白屏问题
         setTimeout(() => {
             try {
                 generateReport();
             } catch (error) {
                 console.error('报告生成错误:', error);
-                document.getElementById('reportContent').innerHTML = `<div style="color:red; padding:20px;">报告生成失败：${error.message}<br>请刷新页面重试</div>`;
+                document.getElementById('reportContent').innerHTML = `<div style="color:red; padding:20px; font-size:1.2rem;">报告生成遇到点小问题：${error.message}<br>请刷新页面重试</div>`;
             } finally {
                 document.getElementById('loadingOverlay').style.display = 'none';
             }
@@ -632,10 +816,10 @@ function calcBMI() {
     if(h > 0 && w > 0) {
         const bmi = (w / Math.pow(h/100, 2)).toFixed(1);
         let status = '';
-        if (bmi < 18.5) status = '(偏瘦)';
-        else if (bmi < 24) status = '(正常)';
-        else if (bmi < 28) status = '(超重)';
-        else status = '(肥胖)';
+        if (bmi < 18.5) status = '(偏瘦，注意营养)';
+        else if (bmi < 24) status = '(非常标准)';
+        else if (bmi < 28) status = '(稍胖，注意饮食)';
+        else status = '(偏胖，建议运动)';
         display.innerText = `BMI: ${bmi} ${status}`;
     } else {
         display.innerText = 'BMI: --';
@@ -647,18 +831,24 @@ function startLangTest() {
     const btn = document.getElementById('btnLang');
     const status = document.getElementById('langStatus');
     btn.disabled = true;
+    btn.innerText = '⏳ 正在录音...';
     status.className = 'status-box status-running';
-    status.innerText = '🔴 正在录音识别中...';
+    status.innerText = '🔴 麦克风已开启，请开始朗读...';
+    
     setTimeout(() => {
-        const recognizedText = "今天的天气很好，我想去公园散步，看看花草树木。";
-        const mockScore = Math.floor(Math.random() * 30) + 70;
-        data.aiTests.language = { done: true, score: mockScore, text: recognizedText };
-        status.className = 'status-box status-done';
-        status.innerHTML = `✅ 识别成功<br>内容："${recognizedText}"<br>流畅度评分：${mockScore}/100`;
-        btn.innerText = '✅ 已完成';
-        btn.classList.add('btn-success');
-        document.getElementById('nav-test1').classList.add('completed');
-        checkAllTestsComplete();
+        status.innerText = '🔊 正在分析语音清晰度...';
+        setTimeout(() => {
+            const recognizedText = "今天的天气很好，我想去公园散步，看看花草树木。";
+            const mockScore = Math.floor(Math.random() * 30) + 70;
+            data.aiTests.language = { done: true, score: mockScore, text: recognizedText };
+            status.className = 'status-box status-done';
+            status.innerHTML = `✅ 识别成功<br>您读得很清楚！<br>流畅度评分：${mockScore}/100`;
+            btn.innerText = '✅ 已完成';
+            btn.classList.add('btn-success');
+            document.getElementById('nav-test1').classList.add('completed');
+            document.getElementById('nav-test1').innerText = '1️⃣ 说话清晰度 (完成)';
+            checkAllTestsComplete();
+        }, 1500);
     }, 2500);
 }
 
@@ -668,40 +858,64 @@ function startActionTest() {
     const status = document.getElementById('actionStatus');
     const video = document.getElementById('videoElement');
     const canvas = document.getElementById('output_canvas');
+    
+    if (typeof Pose === 'undefined') {
+        alert('❌ 错误：AI 模型库加载失败，请检查网络连接或刷新页面。');
+        return;
+    }
+
     btn.disabled = true;
+    btn.innerText = '⏳ 启动中...';
     status.className = 'status-box status-running';
-    status.innerText = '📹 正在启动摄像头...';
+    status.innerText = '📹 正在连接摄像头，请允许权限...';
+    
     try {
         pose = new Pose({locateFile: (file) => {
             return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
         }});
         pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
         pose.onResults(onActionResults);
+        
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
                 .then(function(stream) {
                     video.srcObject = stream;
                     video.style.display = 'block';
                     canvas.style.display = 'block';
+                    
+                    if (typeof Camera === 'undefined') {
+                         throw new Error("Camera 工具未加载");
+                    }
+
                     camera = new Camera(video, {
                         onFrame: async () => { await pose.send({image: video}); },
                         width: 640, height: 480
                     });
                     camera.start();
-                    status.innerText = '✅ 摄像头已启动，请开始做椅子站立动作';
+                    status.innerText = '✅ 摄像头已就绪，请抱胸坐好，准备开始！';
+                    status.style.color = 'var(--primary)';
                     simulateStandCount();
                 })
                 .catch(function(error) {
+                    console.error(error);
                     status.className = 'status-box status-error';
-                    status.innerText = '❌ 摄像头访问失败：' + error.message;
+                    if (error.name === 'NotAllowedError') {
+                        status.innerText = '❌ 摄像头权限被拒绝，请在浏览器地址栏允许摄像头权限。';
+                    } else if (location.protocol === 'file:') {
+                        status.innerText = '❌ 安全限制：直接打开文件无法使用摄像头，请使用本地服务器 (localhost) 运行。';
+                    } else {
+                        status.innerText = '❌ 摄像头无法启动：' + error.message;
+                    }
                     btn.disabled = false;
+                    btn.innerText = '📹 重试开启摄像头';
                 });
         } else {
             status.className = 'status-box status-error';
-            status.innerText = '❌ 您的浏览器不支持摄像头功能';
+            status.innerText = '❌ 您的设备不支持摄像头功能';
             btn.disabled = false;
         }
     } catch (error) {
+        console.error(error);
         status.className = 'status-box status-error';
         status.innerText = '❌ 系统初始化失败：' + error.message;
         btn.disabled = false;
@@ -716,7 +930,7 @@ function onActionResults(results) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
     if (results.poseLandmarks) {
-        drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {color: '#00FF00', lineWidth: 3});
+        drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {color: '#00FF00', lineWidth: 4});
     }
     ctx.restore();
 }
@@ -727,14 +941,16 @@ function simulateStandCount() {
         count++;
         document.getElementById('actionCount').innerText = `完成次数：${count}/5`;
         document.getElementById('actionProgress').style.width = (count * 20) + '%';
-        if (count >= 5) { clearInterval(interval); finishActionTest(); }
+        if (count >= 5) { 
+            clearInterval(interval); 
+            finishActionTest(); 
+        }
     }, 1500);
 }
 
 function finishActionTest() {
     const btn = document.getElementById('btnAction');
     const status = document.getElementById('actionStatus');
-    // 彻底释放资源，防止卡顿
     if (camera) { camera.stop(); camera = null; }
     if (pose) { pose.close(); pose = null; }
     const video = document.getElementById('videoElement');
@@ -746,11 +962,13 @@ function finishActionTest() {
     let score = 0;
     if (mockTime < 10) score = 95; else if (mockTime < 15) score = 80; else score = 60;
     data.aiTests.action = { done: true, score: score, time: mockTime };
+    
     status.className = 'status-box status-done';
-    status.innerHTML = `✅ 测试完成<br>耗时：${mockTime}秒<br>评分：${score}/100`;
+    status.innerHTML = `✅ 太棒了！测试完成<br>耗时：${mockTime}秒<br>腿部力量评分：${score}/100`;
     btn.innerText = '✅ 已完成';
     btn.classList.add('btn-success');
     document.getElementById('nav-test2').classList.add('completed');
+    document.getElementById('nav-test2').innerText = '2️⃣ 腿部力量 (完成)';
     checkAllTestsComplete();
 }
 
@@ -760,42 +978,60 @@ function startGaitTest() {
     const status = document.getElementById('gaitStatus');
     const video = document.getElementById('videoElement2');
     const canvas = document.getElementById('output_canvas2');
+
+    if (typeof Pose === 'undefined') {
+        alert('❌ 错误：AI 模型库加载失败，请检查网络连接。');
+        return;
+    }
+    
     btn.disabled = true;
+    btn.innerText = '⏳ 启动中...';
     status.className = 'status-box status-running';
-    status.innerText = '📹 正在启动摄像头...';
+    status.innerText = '📹 正在连接摄像头...';
+    
     try {
         pose2 = new Pose({locateFile: (file) => {
             return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
         }});
         pose2.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
         pose2.onResults(onGaitResults);
+        
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
                 .then(function(stream) {
                     video.srcObject = stream;
                     video.style.display = 'block';
                     canvas.style.display = 'block';
+                    if (typeof Camera === 'undefined') throw new Error("Camera 工具未加载");
+                    
                     camera2 = new Camera(video, {
                         onFrame: async () => { await pose2.send({image: video}); },
                         width: 640, height: 480
                     });
                     camera2.start();
-                    status.innerText = '✅ 摄像头已启动，请从画面一侧走到另一侧';
+                    status.innerText = '✅ 准备就绪，请向前方直线行走 4 米';
+                    status.style.color = 'var(--primary)';
                     simulateGaitTest();
                 })
                 .catch(function(error) {
+                    console.error(error);
                     status.className = 'status-box status-error';
-                    status.innerText = '❌ 摄像头访问失败：' + error.message;
+                    if (location.protocol === 'file:') {
+                        status.innerText = '❌ 安全限制：直接打开文件无法使用摄像头，请使用本地服务器运行。';
+                    } else {
+                        status.innerText = '❌ 摄像头访问失败';
+                    }
                     btn.disabled = false;
                 });
         } else {
             status.className = 'status-box status-error';
-            status.innerText = '❌ 您的浏览器不支持摄像头功能';
+            status.innerText = '❌ 设备不支持';
             btn.disabled = false;
         }
     } catch (error) {
+        console.error(error);
         status.className = 'status-box status-error';
-        status.innerText = '❌ 系统初始化失败：' + error.message;
+        status.innerText = '❌ 系统错误';
         btn.disabled = false;
     }
 }
@@ -808,7 +1044,7 @@ function onGaitResults(results) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
     if (results.poseLandmarks) {
-        drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {color: '#00FF00', lineWidth: 3});
+        drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {color: '#00FF00', lineWidth: 4});
     }
     ctx.restore();
 }
@@ -825,7 +1061,6 @@ function simulateGaitTest() {
 function finishGaitTest() {
     const btn = document.getElementById('btnGait');
     const status = document.getElementById('gaitStatus');
-    // 彻底释放资源
     if (camera2) { camera2.stop(); camera2 = null; }
     if (pose2) { pose2.close(); pose2 = null; }
     const video = document.getElementById('videoElement2');
@@ -837,12 +1072,14 @@ function finishGaitTest() {
     let score = 0;
     if (mockSpeed >= 1.0) score = 90; else if (mockSpeed >= 0.8) score = 75; else score = 55;
     data.aiTests.gait = { done: true, score: score, speed: mockSpeed };
+    
     status.className = 'status-box status-done';
-    status.innerHTML = `✅ 测试完成<br>步速：${mockSpeed} m/s<br>评分：${score}/100`;
+    status.innerHTML = `✅ 行走测试完成<br>步速：${mockSpeed} 米/秒<br>活力评分：${score}/100`;
     document.getElementById('gaitSpeed').innerText = `步速：${mockSpeed} m/s`;
     btn.innerText = '✅ 已完成';
     btn.classList.add('btn-success');
     document.getElementById('nav-test3').classList.add('completed');
+    document.getElementById('nav-test3').innerText = '3️⃣ 走路速度 (完成)';
     checkAllTestsComplete();
 }
 
@@ -856,47 +1093,58 @@ function checkAllTestsComplete() {
     }
 }
 
-// ================= 生成报告 (五大维度版) =================
+// ================= 生成报告 (六大维度版) =================
 function generateReport() {
     const d = data;
     const date = new Date().toLocaleDateString('zh-CN');
+    const q = d.questionnaire;
     
-    // 计算各维度得分
-    const sensoryScore = Math.round(((d.questionnaire.vision + d.questionnaire.hearing) / 4) * 100);
-    const moodScore = Math.round(((6 - d.questionnaire.mood1 - d.questionnaire.mood2) / 6) * 100);
-    const nutritionScore = Math.round(((4 - d.questionnaire.weight - d.questionnaire.appetite) / 4) * 100);
-    
-    // 将行动能力和活力步速合并为"身体机能"
+    // 1. 身体机能 (AI 行动 + AI 步速)
     const physicalScore = Math.round((d.aiTests.action.score + d.aiTests.gait.score) / 2);
     
-    // 综合得分 (除以 5)
-    const avgScore = Math.round((
-        d.aiTests.language.score + 
-        physicalScore + 
-        sensoryScore + 
-        moodScore + 
-        nutritionScore
-    ) / 5);
+    // 2. 认知功能 (AI 语言 + 问卷记忆 + 问卷定向) -> 转换为 0-100
+    const cognitiveRaw = (q.memory + q.orientation); // 0-4
+    const cognitiveScore = Math.round(((4 - cognitiveRaw) / 4 * 40) + (d.aiTests.language.score * 0.6));
+    
+    // 3. 心理活力 (问卷心情) -> 0-2 分，转换为 100-0
+    const moodRaw = q.mood;
+    const moodScore = Math.round(((2 - moodRaw) / 2) * 100);
+    
+    // 4. 营养状况 (问卷营养 + 口腔) -> 0-4 分，转换为 100-0
+    const nutritionRaw = q.nutrition + q.oral;
+    const nutritionScore = Math.round(((4 - nutritionRaw) / 4) * 100);
+    
+    // 5. 生活自理 (问卷 ADL + 睡眠疼痛 + 排泄 + 精细动作 + 用药) -> 0-10 分，转换为 100-0
+    const adlRaw = q.adl + q.sleep_pain + q.incontinence + q.fine_motor + q.medication;
+    const adlScore = Math.round(((10 - adlRaw) / 10) * 100);
+    
+    // 6. 安全社会 (问卷跌倒 + 家居 + 社交 + 数字能力) -> 0-8 分，转换为 100-0
+    const safetyRaw = q.fall + q.home_safe + q.social + q.digital;
+    const safetyScore = Math.round(((8 - safetyRaw) / 8) * 100);
+    
+    // 综合得分
+    const avgScore = Math.round((physicalScore + cognitiveScore + moodScore + nutritionScore + adlScore + safetyScore) / 6);
     
     let riskLevel = '';
     let riskColor = '';
-    if (avgScore >= 85) { riskLevel = '低风险 (内在能力完好)'; riskColor = 'risk-low'; }
-    else if (avgScore >= 70) { riskLevel = '中风险 (能力下降)'; riskColor = 'risk-mid'; }
-    else { riskLevel = '高风险 (需干预)'; riskColor = 'risk-high'; }
+    if (avgScore >= 85) { riskLevel = '优秀 (内在能力完好)'; riskColor = 'risk-low'; }
+    else if (avgScore >= 70) { riskLevel = '良好 (能力轻微下降)'; riskColor = 'risk-mid'; }
+    else { riskLevel = '需关注 (建议干预)'; riskColor = 'risk-high'; }
 
-    const getRiskText = (score) => score < 70 ? '需关注' : '正常';
+    const getRiskText = (score) => score < 70 ? '需关注' : '状态良好';
     const getRiskClass = (score) => score < 70 ? 'risk-mid' : 'risk-low';
 
-    // 绘制雷达图 (5 个维度)
+    // 绘制雷达图 (6 个维度)
     try {
         const radarData = {
-            labels: ['身体机能', '认知功能', '营养状况', '心理健康', '社会交往'],
+            labels: ['身体机能', '认知功能', '心理活力', '营养状况', '生活自理', '安全社会'],
             values: [
                 Math.round(physicalScore / 10),
-                Math.round(d.aiTests.language.score / 10),
-                Math.round(nutritionScore / 10),
+                Math.round(cognitiveScore / 10),
                 Math.round(moodScore / 10),
-                Math.round(sensoryScore / 10)
+                Math.round(nutritionScore / 10),
+                Math.round(adlScore / 10),
+                Math.round(safetyScore / 10)
             ],
             threshold: 7,
             colors: []
@@ -914,45 +1162,48 @@ function generateReport() {
                 data: {
                     labels: radarData.labels,
                     datasets: [{
-                        label: '能力得分 (阈值 7 分)',
+                        label: '您的能力得分',
                         data: radarData.values,
-                        backgroundColor: 'rgba(46, 134, 171, 0.2)',
+                        backgroundColor: 'rgba(46, 134, 171, 0.3)',
                         borderColor: '#2E86AB',
-                        borderWidth: 2,
+                        borderWidth: 3,
                         pointBackgroundColor: radarData.colors,
-                        pointBorderColor: '#fff',
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: radarData.colors
+                        pointRadius: 6,
+                        pointHoverRadius: 8
                     }, {
-                        label: '阈值线',
-                        data: Array(5).fill(radarData.threshold),
-                        backgroundColor: 'rgba(192, 57, 43, 0.1)',
+                        label: '健康参考线',
+                        data: Array(6).fill(radarData.threshold),
+                        backgroundColor: 'rgba(192, 57, 43, 0.05)',
                         borderColor: '#c0392b',
-                        borderWidth: 1,
+                        borderWidth: 2,
                         borderDash: [5, 5],
                         pointRadius: 0
                     }]
                 },
                 options: {
-                    // 优化：关闭动画以提升性能，解决卡顿
                     animation: false, 
                     scales: {
                         r: {
                             beginAtZero: true,
                             max: 10,
-                            ticks: { stepSize: 1, font: { size: 14 } },
-                            pointLabels: { font: { size: 14, weight: 'bold' } }
+                            ticks: { stepSize: 1, font: { size: 14, color: '#666' } },
+                            pointLabels: { font: { size: 14, weight: 'bold', color: '#333' } },
+                            grid: { color: '#eee' }
                         }
                     },
                     plugins: {
-                        legend: { position: 'bottom', labels: { font: { size: 12 } } },
+                        legend: { position: 'bottom', labels: { font: { size: 14 } } },
                         tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 16 },
+                            bodyFont: { size: 14 },
+                            padding: 10,
                             callbacks: {
                                 label: function(context) {
                                     const value = context.raw;
                                     const dimension = radarData.labels[context.dataIndex];
                                     let tip = `${dimension}: ${value} 分`;
-                                    if (value < radarData.threshold) tip += ' (低于阈值，需关注)';
+                                    if (value < radarData.threshold) tip += ' (低于参考值)';
                                     return tip;
                                 }
                             }
@@ -963,11 +1214,10 @@ function generateReport() {
                 }
             });
         } else {
-            throw new Error("Chart.js 库未加载成功");
+            throw new Error("Chart.js 未加载");
         }
     } catch (chartError) {
         console.error('雷达图绘制失败:', chartError);
-        // 如果图表失败，在页面提示，但不阻止报告生成
         const chartContainer = document.querySelector('.chart-container');
         if(chartContainer) {
             chartContainer.innerHTML += `<div style="color:red; text-align:center; margin-top:10px;">⚠️ 图表加载失败，请检查网络连接</div>`;
@@ -976,76 +1226,105 @@ function generateReport() {
 
     // 生成干预任务
     const tasks = { daily: [], weekly: [] };
+    
     if (physicalScore < 80) {
-        tasks.daily.push({ title: '平衡训练：单腿站立', desc: '每侧站立 30 秒，共 2 组，站立时扶稳固定物体' });
-        tasks.daily.push({ title: '肌力训练：靠墙静蹲', desc: '30 秒/组，3 组，膝盖不超过脚尖' });
+        tasks.daily.push({ title: '🪑 坐站练习', desc: '坐在稳固椅子上，不扶手，缓慢站起坐下，每组 5 次，做 2 组。' });
+        tasks.daily.push({ title: '🦩 单腿站立', desc: '手扶椅背，单腿站立 10-20 秒，换腿，预防跌倒。' });
     } else {
-        tasks.daily.push({ title: '日常运动：快走 30 分钟', desc: '步速 5-6km/h，晚饭后 1 小时进行' });
+        tasks.daily.push({ title: '🚶 户外散步', desc: '天气好时，户外快走 30 分钟，保持微微出汗。' });
     }
-    if (d.aiTests.language.score < 80) {
-        tasks.daily.push({ title: '认知训练：朗读短文', desc: '朗读报纸/书籍片段 5 分钟，锻炼语言流畅度' });
+    
+    if (cognitiveScore < 80) {
+        tasks.daily.push({ title: '📖 朗读报纸', desc: '大声朗读新闻或书籍 5-10 分钟，锻炼大脑和舌头。' });
+        tasks.weekly.push({ title: '🧩 益智游戏', desc: '玩一次拼图、象棋或数独，活动脑筋。' });
     } else {
-        tasks.weekly.push({ title: '认知维护：益智游戏', desc: '玩拼图、数独等游戏 1 次，每次 15 分钟' });
+        tasks.weekly.push({ title: '📚 阅读学习', desc: '阅读一本好书或学习一个新知识（如手机新功能）。' });
     }
+    
     if (nutritionScore < 80) {
-        tasks.daily.push({ title: '营养补充：优质蛋白', desc: '早餐 1 个鸡蛋 +1 杯低脂牛奶，保证蛋白质摄入' });
-        tasks.weekly.push({ title: '营养监测：体重记录', desc: '每周固定时间（晨起空腹）测量体重 1 次' });
+        tasks.daily.push({ title: '🥚 优质蛋白', desc: '每天保证 1 个鸡蛋 +1 杯牛奶/豆浆，多吃鱼虾瘦肉。' });
+        tasks.weekly.push({ title: '⚖️ 称重记录', desc: '每周固定时间称一次体重，观察变化。' });
     } else {
-        tasks.weekly.push({ title: '营养维持：均衡饮食', desc: '每周至少吃 2 次鱼类，补充不饱和脂肪酸' });
+        tasks.weekly.push({ title: '🥦 均衡饮食', desc: '每周至少吃 2 次深色蔬菜和鱼类。' });
     }
+    
     if (moodScore < 80) {
-        tasks.daily.push({ title: '情绪调节：深呼吸放松', desc: '早晚各 1 次，每次 5 分钟，缓解压力' });
-        tasks.weekly.push({ title: '社交活动：与人交流', desc: '每周与亲友聊天/见面至少 2 次，避免孤独' });
+        tasks.daily.push({ title: '🌬️ 深呼吸', desc: '早晚各做一次腹式深呼吸，放松身心 5 分钟。' });
+        tasks.weekly.push({ title: '🗣️ 亲友聊天', desc: '主动给老朋友或子女打个电话，聊聊天。' });
     } else {
-        tasks.weekly.push({ title: '社交维护：社区活动', desc: '参与社区老年活动 1 次，拓展社交圈' });
+        tasks.weekly.push({ title: '🎉 社区活动', desc: '参加一次社区老年活动或兴趣小组。' });
     }
-    if (sensoryScore < 80) {
-        tasks.daily.push({ title: '感官保护：视力/听力护理', desc: '视力：做眼保健操 1 次；听力：避免噪音环境' });
+
+    if (adlScore < 80) {
+        tasks.daily.push({ title: '🛁 自理训练', desc: '尝试自己完成洗澡、穿衣等动作，动作慢一点没关系。' });
+        tasks.weekly.push({ title: '💅 修剪指甲', desc: '使用长柄指甲刀或请家人协助修剪脚趾甲。' });
     }
-    tasks.daily.push({ title: '健康监测：基础指标记录', desc: '测量血压/血氧（如有设备），记录数值' });
-    tasks.weekly.push({ title: '健康复盘：任务完成情况', desc: '查看本周任务完成率，调整下周计划' });
+
+    if (safetyScore < 80) {
+        tasks.daily.push({ title: '🏠 环境检查', desc: '检查地面是否有杂物、电线，浴室是否防滑。' });
+        tasks.weekly.push({ title: '🤝 社交互动', desc: '至少与亲友见面或视频通话 1 次，减少孤独感。' });
+    }
+    
+    // 新增任务
+    if (q.digital > 0) {
+        tasks.weekly.push({ title: '📱 数字学习', desc: '让子女教一个手机新功能（如发红包、看视频）。' });
+    }
+    if (q.fine_motor > 0) {
+        tasks.daily.push({ title: '👐 手部操', desc: '练习抓握健身球，或尝试拧瓶盖、扣扣子。' });
+    }
+    
+    tasks.daily.push({ title: '💊 按时服药', desc: '如果有慢性病，请按时按量服用医生开的药。' });
+    tasks.weekly.push({ title: '📝 健康复盘', desc: '看看本周任务完成了多少，给自己点个赞！' });
 
     renderTasks(tasks);
 
-    // 生成报告 HTML (5 行表格)
+    // 生成报告 HTML
     const html = `
         <div style="text-align:center; border-bottom:2px solid #333; padding-bottom:20px; margin-bottom:20px;">
-            <h3>老年人内在能力综合评估报告</h3>
+            <h3 style="color:var(--primary);">长者全维健康能力评估报告</h3>
             <p>依据：《老年人内在能力筛查与综合评估中国专家共识》& WHO ICOPE 指南</p>
-            <p>评估日期：${date} | 姓名：${d.basic.name} | 年龄：${d.basic.age}岁 | 性别：${d.basic.gender}</p>
-            <p>BMI：${d.basic.bmi} | 慢性病史：${d.basic.diseases}</p>
+            <p style="font-size:1.1rem;">评估日期：${date} &nbsp;|&nbsp; 姓名：${d.basic.name} &nbsp;|&nbsp; 年龄：${d.basic.age}岁</p>
+            <p style="font-size:1.1rem;">BMI：${d.basic.bmi} &nbsp;|&nbsp; 居住情况：${d.basic.living === 'alone' ? '独居' : (d.basic.living === 'spouse' ? '与配偶同住' : (d.basic.living === 'family' ? '与家人同住' : '养老机构'))}</p>
         </div>
         
-        <table class="report-table">
+        <table class="report-table" style="width:100%; border-collapse:collapse; margin:20px 0; font-size:1.1rem;">
             <thead>
-                <tr><th>评估维度</th><th>测量方式</th><th>得分</th><th>评估结论</th></tr>
+                <tr style="background:#f2f2f2;">
+                    <th style="border:1px solid #ddd; padding:12px; text-align:left;">评估维度</th>
+                    <th style="border:1px solid #ddd; padding:12px; text-align:left;">测量方式</th>
+                    <th style="border:1px solid #ddd; padding:12px; text-align:center;">得分</th>
+                    <th style="border:1px solid #ddd; padding:12px; text-align:center;">评估结论</th>
+                </tr>
             </thead>
             <tbody>
-                <tr><td><strong>1. 身体机能</strong></td><td>AI 视觉 (坐站 + 步速)</td><td>${physicalScore}/100</td><td class="${getRiskClass(physicalScore)}">${getRiskText(physicalScore)}</td></tr>
-                <tr><td><strong>2. 认知功能</strong></td><td>AI 语音识别</td><td>${d.aiTests.language.score}/100</td><td class="${getRiskClass(d.aiTests.language.score)}">${getRiskText(d.aiTests.language.score)}</td></tr>
-                <tr><td><strong>3. 营养状况</strong></td><td>BMI+ 问卷</td><td>${nutritionScore}/100</td><td class="${getRiskClass(nutritionScore)}">${getRiskText(nutritionScore)}</td></tr>
-                <tr><td><strong>4. 心理健康</strong></td><td>PHQ-2 量表</td><td>${moodScore}/100</td><td class="${getRiskClass(moodScore)}">${getRiskText(moodScore)}</td></tr>
-                <tr><td><strong>5. 社会交往</strong></td><td>感官功能问卷</td><td>${sensoryScore}/100</td><td class="${getRiskClass(sensoryScore)}">${getRiskText(sensoryScore)}</td></tr>
+                <tr><td style="border:1px solid #ddd; padding:12px;"><strong>1. 身体机能</strong></td><td style="border:1px solid #ddd; padding:12px;">AI 视觉 (坐站 + 步速)</td><td style="border:1px solid #ddd; padding:12px; text-align:center;">${physicalScore}/100</td><td style="border:1px solid #ddd; padding:12px; text-align:center;" class="${getRiskClass(physicalScore)}">${getRiskText(physicalScore)}</td></tr>
+                <tr><td style="border:1px solid #ddd; padding:12px;"><strong>2. 认知功能</strong></td><td style="border:1px solid #ddd; padding:12px;">AI 语音 + 记忆自测</td><td style="border:1px solid #ddd; padding:12px; text-align:center;">${Math.round(cognitiveScore)}/100</td><td style="border:1px solid #ddd; padding:12px; text-align:center;" class="${getRiskClass(cognitiveScore)}">${getRiskText(cognitiveScore)}</td></tr>
+                <tr><td style="border:1px solid #ddd; padding:12px;"><strong>3. 心理活力</strong></td><td style="border:1px solid #ddd; padding:12px;">情绪问卷</td><td style="border:1px solid #ddd; padding:12px; text-align:center;">${Math.round(moodScore)}/100</td><td style="border:1px solid #ddd; padding:12px; text-align:center;" class="${getRiskClass(moodScore)}">${getRiskText(moodScore)}</td></tr>
+                <tr><td style="border:1px solid #ddd; padding:12px;"><strong>4. 营养状况</strong></td><td style="border:1px solid #ddd; padding:12px;">BMI+ 饮食 + 口腔</td><td style="border:1px solid #ddd; padding:12px; text-align:center;">${Math.round(nutritionScore)}/100</td><td style="border:1px solid #ddd; padding:12px; text-align:center;" class="${getRiskClass(nutritionScore)}">${getRiskText(nutritionScore)}</td></tr>
+                <tr><td style="border:1px solid #ddd; padding:12px;"><strong>5. 生活自理</strong></td><td style="border:1px solid #ddd; padding:12px;">ADL+ 睡眠 + 排泄 + 用药</td><td style="border:1px solid #ddd; padding:12px; text-align:center;">${Math.round(adlScore)}/100</td><td style="border:1px solid #ddd; padding:12px; text-align:center;" class="${getRiskClass(adlScore)}">${getRiskText(adlScore)}</td></tr>
+                <tr><td style="border:1px solid #ddd; padding:12px;"><strong>6. 安全社会</strong></td><td style="border:1px solid #ddd; padding:12px;">跌倒风险 + 环境 + 数字</td><td style="border:1px solid #ddd; padding:12px; text-align:center;">${Math.round(safetyScore)}/100</td><td style="border:1px solid #ddd; padding:12px; text-align:center;" class="${getRiskClass(safetyScore)}">${getRiskText(safetyScore)}</td></tr>
             </tbody>
         </table>
         
-        <div style="background:#f8f9fa; padding:20px; border-radius:8px; margin-top:20px;">
-            <h3 style="margin-top:0;">📊 综合评估结论</h3>
-            <p style="font-size:1.4rem; font-weight:bold;" class="${riskColor}">内在能力等级：${riskLevel}</p>
-            <p><strong>AI 综合得分：</strong>${avgScore}/100</p>
-            <hr>
-            <h4>💡 个性化干预建议</h4>
-            <ul>
-                <li>${physicalScore < 80 ? '⚠️ <strong>身体机能：</strong>建议进行平衡训练、太极等低强度运动，预防跌倒。' : '✅ <strong>身体机能：</strong>保持当前活动水平，每周至少 3 次轻度运动。'}</li>
-                <li>${moodScore < 70 ? '⚠️ <strong>心理健康：</strong>建议增加社交活动，参与社区老年课堂，必要时寻求心理咨询。' : '✅ <strong>心理健康：</strong>情绪状态良好，建议继续保持社交互动。'}</li>
-                <li>${nutritionScore < 70 ? '⚠️ <strong>营养状况：</strong>建议营养科就诊，调整饮食结构，保证蛋白质和维生素摄入。' : '✅ <strong>营养状况：</strong>保持均衡饮食，规律三餐。'}</li>
-                <li>${sensoryScore < 70 ? '⚠️ <strong>社会交往：</strong>建议验光配镜/听力检测，改善视听功能以促进社交。' : '✅ <strong>社会交往：</strong>视听功能良好，建议多参与社区活动。'}</li>
-                <li>📌 建议每 3 个月复测一次，动态监测内在能力变化。</li>
+        <div style="background:#f8f9fa; padding:25px; border-radius:10px; margin-top:20px; border:1px solid #eee;">
+            <h3 style="margin-top:0; color:var(--primary);">📊 综合评估结论</h3>
+            <p style="font-size:1.5rem; font-weight:bold; margin:15px 0;" class="${riskColor}">内在能力等级：${riskLevel}</p>
+            <p style="font-size:1.2rem;"><strong>AI 综合得分：</strong>${avgScore}/100 分</p>
+            <hr style="border:0; border-top:1px solid #ddd; margin:20px 0;">
+            <h4 style="color:var(--accent);">💡 个性化健康建议</h4>
+            <ul style="line-height:2; font-size:1.1rem;">
+                <li>${physicalScore < 80 ? '⚠️ <strong>身体机能：</strong>您的腿部力量或步速稍弱，建议进行平衡训练、太极拳等运动，家中注意防滑，预防跌倒。' : '✅ <strong>身体机能：</strong>您的行动能力保持得很好，请继续保持当前的活动水平，每周至少运动 3 次。'}</li>
+                <li>${cognitiveScore < 80 ? '⚠️ <strong>认知功能：</strong>近期记忆力或方向感有所下降，建议多进行阅读、下棋等脑力活动，必要时就医检查。' : '✅ <strong>认知功能：</strong>您的思维很清晰，记忆力保持良好。'}</li>
+                <li>${moodScore < 70 ? '⚠️ <strong>心理活力：</strong>近期似乎有些情绪低落，建议多与家人朋友聊天，参与社区活动，必要时可寻求专业帮助。' : '✅ <strong>心理活力：</strong>您的心态很积极，情绪状态良好，这是健康的基石。'}</li>
+                <li>${nutritionScore < 70 ? '⚠️ <strong>营养状况：</strong>近期体重、食欲或牙齿状况有波动，建议饮食多样化，保证蛋、奶、肉的摄入，必要时咨询营养科或牙科。' : '✅ <strong>营养状况：</strong>您的饮食习惯和口腔健康良好，请继续保持。'}</li>
+                <li>${adlScore < 80 ? '⚠️ <strong>生活自理：</strong>在日常洗澡、穿衣、睡眠或用药方面有些困难，建议改善家居环境（如加装扶手），或使用辅助工具。' : '✅ <strong>生活自理：</strong>您的日常生活自理能力很强，睡眠质量良好。'}</li>
+                <li>${safetyScore < 80 ? '⚠️ <strong>安全社会：</strong>存在跌倒风险、居家隐患或数字鸿沟，建议清理家中杂物，学习使用智能手机，增加社交活动。' : '✅ <strong>安全社会：</strong>您的居家环境安全，社会支持系统良好，能跟上时代步伐。'}</li>
+                <li>📌 <strong>温馨提示：</strong>建议每 3-6 个月复测一次，动态监测身体变化。</li>
             </ul>
         </div>
         
-        <div style="margin-top:20px; padding:15px; background:#fff3cd; border-radius:6px; font-size:0.9rem;">
-            <strong>⚠️ 免责声明：</strong>本评估结果基于 AI 算法和标准化问卷生成，仅供参考，不能替代专业医疗诊断。如有健康问题，请及时咨询医生。
+        <div style="margin-top:30px; padding:20px; background:#FFF3E0; border-radius:8px; font-size:1rem; color:#555; border:1px solid #FFE0B2;">
+            <strong>⚠️ 免责声明：</strong>本评估结果基于 AI 算法和标准化问卷生成，仅供健康参考，不能替代医院的专业医疗诊断。如有身体不适，请及时就医。
         </div>
     `;
     
@@ -1057,18 +1336,20 @@ function renderTasks(tasks) {
     const weeklyContainer = document.getElementById('weeklyTasks');
     dailyContainer.innerHTML = '';
     weeklyContainer.innerHTML = '';
+    
     tasks.daily.forEach((task, index) => {
         const taskEl = document.createElement('div');
         taskEl.className = 'task-item';
-        taskEl.innerHTML = `<input type="checkbox" id="daily-task-${index}"><div><label for="daily-task-${index}">${task.title}</label><div class="task-desc">${task.desc}</div></div>`;
+        taskEl.innerHTML = `<input type="checkbox" id="daily-task-${index}"><div><label for="daily-task-${index}">${task.title}</label><span class="task-desc">${task.desc}</span></div>`;
         dailyContainer.appendChild(taskEl);
         const checkbox = taskEl.querySelector('input[type="checkbox"]');
         checkbox.addEventListener('change', function() { if (this.checked) taskEl.classList.add('checked'); else taskEl.classList.remove('checked'); });
     });
+    
     tasks.weekly.forEach((task, index) => {
         const taskEl = document.createElement('div');
         taskEl.className = 'task-item';
-        taskEl.innerHTML = `<input type="checkbox" id="weekly-task-${index}"><div><label for="weekly-task-${index}">${task.title}</label><div class="task-desc">${task.desc}</div></div>`;
+        taskEl.innerHTML = `<input type="checkbox" id="weekly-task-${index}"><div><label for="weekly-task-${index}">${task.title}</label><span class="task-desc">${task.desc}</span></div>`;
         weeklyContainer.appendChild(taskEl);
         const checkbox = taskEl.querySelector('input[type="checkbox"]');
         checkbox.addEventListener('change', function() { if (this.checked) taskEl.classList.add('checked'); else taskEl.classList.remove('checked'); });
@@ -1078,3 +1359,4 @@ function renderTasks(tasks) {
 
 </body>
 </html>
+```
